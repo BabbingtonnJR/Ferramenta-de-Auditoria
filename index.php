@@ -11,7 +11,8 @@
     <div class="container">
         <h1>Selecione uma opção</h1>
         <div class="menu-options">
-            <a href="#" class="option-btn">Criar Checklist para Auditoria</a>
+            <a href="checklist.php" class="option-btn">Criar Checklist para Auditoria</a>
+            <a href="lista_checklist.php" class="option-btn">Ver Checklists criadas</a>
             <a href="#" class="option-btn">Exportar Checklist para Auditoria</a>
         </div>
     </div>
