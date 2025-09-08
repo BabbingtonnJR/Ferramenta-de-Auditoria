@@ -116,6 +116,10 @@ foreach ($itens as $item) {
 
 $percentual_aderencia = ($total_itens > 0) ? round(($total_conformes / $total_itens) * 100, 2) : 0;
 
+function e($value) {
+    return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -251,11 +255,11 @@ $percentual_aderencia = ($total_itens > 0) ? round(($total_conformes / $total_it
 </head>
 <body>
     <div class="container">
-    <h1>Checklist: <?= htmlspecialchars($checklist['nome']) ?></h1>
-    <p><strong>Descrição:</strong> <?= htmlspecialchars($checklist['descricao']) ?></p>
+    <h1>Checklist: <?= e($checklist['nome'])?></h1>
+    <p><strong>Descrição:</strong> <?= e($checklist['descricao'])?></p>
 
     <?php if (isset($_GET['msg'])): ?>
-        <div class="msg"><?= htmlspecialchars($_GET['msg']) ?></div>
+        <div class="msg"><?= e($_GET['msg'])?></div>
     <?php endif; ?>
 
     <h2>Itens do Checklist</h2>
@@ -274,9 +278,10 @@ $percentual_aderencia = ($total_itens > 0) ? round(($total_conformes / $total_it
             <?php foreach ($itens as $row): ?>
                 <tr id="item-row-<?= $row['id'] ?>">
                     <td><?= $row['numero_item'] ?></td>
-                    <td><?= htmlspecialchars($row['descricao']) ?></td>
+                    <td><?= e($row['descricao'])?></td>
                     <td>
                         <select name="conformidade[<?= $row['id'] ?>]" onchange="mostrarNaoConformidade(this, '<?= $row['id'] ?>')">
+                            <option value="">Selecione uma opção</option>
                             <option value="Nao Aplicavel" <?= ($row['conformidade'] == 'Nao Aplicavel' || $row['conformidade'] == '') ? 'selected' : '' ?>>Não Aplicável</option>
                             <option value="Sim" <?= ($row['conformidade'] == 'Sim') ? 'selected' : '' ?>>Sim</option>
                             <option value="Nao" <?= ($row['conformidade'] == 'Nao') ? 'selected' : '' ?>>Não</option>
@@ -286,11 +291,11 @@ $percentual_aderencia = ($total_itens > 0) ? round(($total_conformes / $total_it
                         <!-- Bloco para Não Conformidade -->
                         <div id="nao-conformidade-<?= $row['id'] ?>" style="display: <?= ($row['conformidade'] == 'Nao') ? 'block' : 'none' ?>;">
                             <label>Descrição:</label>
-                            <textarea name="descricao_nc[<?= $row['id'] ?>]" rows="2"><?= htmlspecialchars($row['descricao_nc'] ?? '') ?></textarea>
+                            <textarea name="descricao_nc[<?= $row['id'] ?>]" rows="2"><?= e($row['descricao_nc']) ?></textarea>
                             <label>Estado:</label>
-                            <input type="text" name="estado_nc[<?= $row['id'] ?>]" value="<?= htmlspecialchars($row['estado_nc'] ?? '') ?>">
+                            <input type="text" name="estado_nc[<?= $row['id'] ?>]" value="<?= e($row['estado_nc']) ?>">
                             <label>Prioridade:</label>
-                            <input type="text" name="prioridade_nc[<?= $row['id'] ?>]" value="<?= htmlspecialchars($row['prioridade_nc'] ?? '') ?>">
+                            <input type="text" name="prioridade_nc[<?= $row['id'] ?>]" value="<?= e($row['prioridade_nc']) ?>">
                         </div>
 
                         <!-- Bloco para Não Aplicável -->
@@ -308,8 +313,8 @@ $percentual_aderencia = ($total_itens > 0) ? round(($total_conformes / $total_it
             </tbody>
         </table>
         <div class="container" id="relatorio">
-            <h1>Checklist: <?= htmlspecialchars($checklist['nome']) ?></h1>
-            <p><strong>Descrição:</strong> <?= htmlspecialchars($checklist['descricao']) ?></p>
+            <h1>Checklist: <?= e($checklist['nome'])?></h1>
+            <p><strong>Descrição:</strong> <?= e($checklist['descricao']) ?></p>
 
             <table>
                 <thead>
@@ -323,8 +328,8 @@ $percentual_aderencia = ($total_itens > 0) ? round(($total_conformes / $total_it
                     <?php foreach ($itens as $row): ?>
                     <tr>
                         <td><?= $row['numero_item'] ?></td>
-                        <td><?= htmlspecialchars($row['descricao']) ?></td>
-                        <td><?= htmlspecialchars($row['conformidade']) ?></td>
+                        <td><?= e($row['descricao'])?></td>
+                        <td><?= e($row['conformidade']) ?></td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>

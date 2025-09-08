@@ -7,7 +7,7 @@ $conn = conecta_db();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_nc = $_POST['id_nc'] ?? null;
     $destinatario = $_POST['destinatario'] ?? '';
-    $remetente = 'seuemail@gmail.com'; // AQUI VAI SEU EMAIL
+    $remetente = 'checklistes1@gmail.com'; // AQUI VAI SEU EMAIL
     $assunto = $_POST['assunto'] ?? 'Não Conformidade';
     $mensagem = $_POST['mensagem'] ?? '';
 
@@ -27,12 +27,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
-        $mail->Username = "seuemail@gmail.com"; // AQUI TAMBEM VAI SEU EMAIL
-        $mail->Password = 'sua chave de app'; //AQUI VAI A SENHA DO APP OU CHAVE
+        $mail->Username = "checklistes1@gmail.com"; // AQUI TAMBEM VAI SEU EMAIL
+        $mail->Password = 'jmop cguu gjbe fiyp'; //AQUI VAI A SENHA DO APP OU CHAVE
         $mail->SMTPSecure = 'tls';
         $mail->Port = 587;
 
-        $mail->setFrom('seuemail@gmail.com', 'Auditoria'); // igual ao Username
+        $mail->setFrom('checklistes1@gmail.com', 'Auditoria'); // igual ao Username
         $mail->addAddress($destinatario);
 
         $mail->Subject = $assunto;
