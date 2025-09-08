@@ -13,7 +13,7 @@
         <div class="menu-options">
             <a href="checklist.php" class="option-btn">Criar Checklist para Auditoria</a>
             <a href="lista_checklist.php" class="option-btn">Ver Checklists criadas</a>
-            <a href="#" class="option-btn">Exportar Checklist para Auditoria</a>
+            <a href="importar_checklist.php" class="option-btn">Importar Checklist</a>
         </div>
     </div>
 

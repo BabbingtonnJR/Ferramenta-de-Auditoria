@@ -47,12 +47,14 @@ $conn->close();
                         <td><?= htmlspecialchars($row['descricao']) ?></td>
                         <td><?= $row['data_criacao'] ?></td>
                         <td>
-                            <a href="itens.php?id_checklist=<?= $row['id'] ?>">Editar</a>
-                            <a href="excluir_checklist.php?id_checklist=<?= $row['id'] ?>">Excluir</a>
-                            <a href="acessar_checklist.php?id_checklist=<?= $row['id'] ?>">Acessar</a>
-                        </td>
+                            <a href="itens.php?id_checklist=<?= $row['id'] ?>">Editar</a> |
+                            <a href="excluir_checklist.php?id_checklist=<?= $row['id'] ?>">Excluir</a> |
+                            <a href="acessar_checklist.php?id_checklist=<?= $row['id'] ?>">Acessar</a> |
+                            <a href="exportar_checklist.php?id_checklist=<?= $row['id'] ?>">Exportar</a>
+                        </td>       
                     </tr>
                 <?php endwhile; ?>
+                
             </table>
         <?php else: ?>
             <p>Nenhuma checklist encontrada.</p>
