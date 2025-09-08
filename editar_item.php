@@ -54,46 +54,45 @@ if ($id_item > 0 && $id_checklist > 0) {
 $conn->close();
 
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Item</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; padding: 0; }
-        .container { max-width: 500px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #004080; }
-        form { display: flex; flex-direction: column; gap: 12px; }
-        input[type="text"] { padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
-        button { background: #004080; color: white; padding: 10px; border: none; border-radius: 6px; cursor: pointer; }
-        button:hover { background: #0066cc; }
-        .back-link { display: block; text-align: center; margin-top: 20px; color: #004080; text-decoration: none; }
-        .msg { text-align: center; font-weight: bold; margin: 10px 0; color: red; }
-    </style>
+    <link rel="stylesheet" href="css/editar_item.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Editar Item</h1>
+    <header class="header">
+        <h1>✏️ Editar Item - PUCPR</h1>
+    </header>
 
-        <?php if (!empty($msg)): ?>
-            <div class="msg"><?= htmlspecialchars($msg) ?></div>
-        <?php endif; ?>
+    <main class="main-content">
+        <section class="card">
+            <?php if (!empty($msg)): ?>
+                <div class="msg"><?= htmlspecialchars($msg) ?></div>
+            <?php endif; ?>
 
-        <?php if ($item): ?>
-            <form method="POST" action="editar_item.php">
-                <input type="hidden" name="id_item_form" value="<?= $item['id'] ?>">
-                <input type="hidden" name="id_checklist_form" value="<?= $id_checklist ?>">
-                
-                <label for="nova_descricao">Nova Descrição:</label>
-                <input type="text" id="nova_descricao" name="nova_descricao" value="<?= htmlspecialchars($item['descricao']) ?>" required>
-                
-                <button type="submit">Salvar Alterações</button>
-            </form>
-        <?php endif; ?>
+            <?php if ($item): ?>
+                <form method="POST" action="editar_item.php">
+                    <input type="hidden" name="id_item_form" value="<?= $item['id'] ?>">
+                    <input type="hidden" name="id_checklist_form" value="<?= $id_checklist ?>">
+                    
+                    <label for="nova_descricao">Nova Descrição:</label>
+                    <input type="text" id="nova_descricao" name="nova_descricao" value="<?= htmlspecialchars($item['descricao']) ?>" required>
+                    
+                    <button type="submit">Salvar Alterações</button>
+                </form>
+            <?php endif; ?>
 
-        <a href="itens.php?id_checklist=<?= $id_checklist ?>" class="back-link">⬅ Voltar para o Checklist</a>
-    </div>
+            <div class="link-area">
+                <a href="itens.php?id_checklist=<?= $id_checklist ?>" class="back-link">⬅ Voltar para o Checklist</a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        PUCPR - Engenharia de Software © <?= date("Y") ?>
+    </footer>
 </body>
 </html>

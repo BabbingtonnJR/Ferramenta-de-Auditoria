@@ -1,0 +1,205 @@
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Layout base */
+body {
+    background: #f5f5f5;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Cabeçalho */
+.header {
+    background: #800000;
+    color: #fff;
+    padding: 1rem;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.header h1 {
+    font-size: 1.5rem;
+}
+
+/* Conteúdo central */
+.main-content {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 2rem;
+}
+
+/* Card de conteúdo */
+.card {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 600px;
+}
+
+.card h2 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #800000;
+}
+
+/* Botões do menu */
+.menu-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.option-btn {
+    display: block;
+    padding: 1rem;
+    background: #800000;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: 0.3s;
+    font-weight: bold;
+    text-align: center;
+}
+
+.option-btn:hover {
+    background: #a00000;
+}
+
+/* Formulário */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+label {
+    font-weight: bold;
+    color: #800000;
+}
+
+input, textarea {
+    padding: 0.7rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    width: 100%;
+}
+
+input:focus, textarea:focus {
+    border-color: #800000;
+    outline: none;
+}
+
+/* Botão salvar */
+button {
+    padding: 0.9rem;
+    border: none;
+    border-radius: 8px;
+    background: #800000;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: #a00000;
+}
+
+/* Mensagens */
+.msg {
+    margin-top: 1rem;
+    padding: 0.8rem;
+    border-radius: 8px;
+    background: #ffe6e6;
+    color: #800000;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Área de links extras */
+.link-area {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.back-link {
+    display: inline-block;
+    color: #800000;
+    text-decoration: none;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.back-link:hover {
+    color: #a00000;
+}
+
+/* Rodapé */
+.footer {
+    background: #800000;
+    color: #fff;
+    text-align: center;
+    padding: 0.8rem;
+    font-size: 0.9rem;
+    margin-top: auto;
+}
+
+/* Tabela estilizada */
+.styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+}
+
+.styled-table th, .styled-table td {
+    border: 1px solid #ddd;
+    padding: 0.75rem;
+    text-align: left;
+}
+
+.styled-table th {
+    background: #800000;
+    color: #fff;
+}
+
+.styled-table tr:nth-child(even) {
+    background: #f5f5f5;
+}
+
+.styled-table tr:hover {
+    background: #ffe6e6;
+}
+
+/* Relatório */
+.report {
+    margin-top: 2rem;
+    background: #fdf2f2;
+    padding: 1rem;
+    border-radius: 10px;
+    border: 1px solid #f5c6c6;
+}
+.report h3 {
+    color: #800000;
+    margin-bottom: 0.5rem;
+}
+.report button {
+    margin-top: 1rem;
+}
+    
+
+

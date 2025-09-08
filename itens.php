@@ -85,110 +85,59 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Itens do Checklist</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f7fa;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            max-width: 700px;
-            margin: 40px auto;
-            background: #fff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        h1 {
-            text-align: center;
-            color: #004080;
-        }
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        input, select {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-        }
-        button {
-            background: #004080;
-            color: white;
-            padding: 10px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #0066cc;
-        }
-        .msg {
-            text-align: center;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        table, th, td {
-            border: 1px solid #ccc;
-        }
-        th, td {
-            padding: 10px;
-            text-align: center;
-        }
-        .back-link {
-            display: block;
-            text-align: center;
-            margin-top: 20px;
-            color: #004080;
-            text-decoration: none;
-        }
-    </style>
+    <link rel="stylesheet" href="css/itens.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Checklist: <?= htmlspecialchars($checklist['nome']) ?></h1>
-        <p><strong>Descrição:</strong> <?= htmlspecialchars($checklist['descricao']) ?></p>
+    <header class="header">
+        <h1>📋 Itens - PUCPR</h1>
+    </header>
 
-        <?php if (isset($_GET['msg'])): ?>
-            <div class="msg"><?= htmlspecialchars($_GET['msg']) ?></div>
-        <?php endif; ?>
+    <main class="main-content">
+        <section class="card">
+            <h2><?= htmlspecialchars($checklist['nome']) ?></h2>
+            <p><strong>Descrição:</strong> <?= htmlspecialchars($checklist['descricao']) ?></p>
 
-        <h2>Adicionar Novo Item</h2>
-        <form method="POST" action="">
-            <input type="text" name="descricao" placeholder="Descrição do Item" required>
+            <?php if (isset($_GET['msg'])): ?>
+                <div class="msg"><?= htmlspecialchars($_GET['msg']) ?></div>
+            <?php endif; ?>
 
-            <button type="submit">Adicionar Item</button>
-        </form>
+            <h3>Adicionar Novo Item</h3>
+            <form method="POST" action="">
+                <input type="text" name="descricao" placeholder="Descrição do Item" required>
+                <button type="submit">Adicionar Item</button>
+            </form>
 
-        <h2>Itens já cadastrados</h2>
-        <table>
-            <tr>
-                <th>ID</th>
-                <th>Descrição</th>
-                <th>Ações</th>
-            </tr>
-            <?php while ($row = $itens->fetch_assoc()): ?>
-                <tr>
-                    <td><?= $row['numero_item'] ?></td>
-                    <td><?= htmlspecialchars($row['descricao']) ?></td>
-                    <td>
-                        <a href="excluir_item.php?id_item=<?= $row['id'] ?>&id_checklist=<?= $id_checklist ?>" onclick="return confirm('Tem certeza que deseja excluir este item?');">Excluir</a>
+            <h3>Itens já cadastrados</h3>
+            <table class="styled-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Descrição</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php while ($row = $itens->fetch_assoc()): ?>
+                        <tr>
+                            <td><?= $row['numero_item'] ?></td>
+                            <td><?= htmlspecialchars($row['descricao']) ?></td>
+                            <td>
+                                <a href="excluir_item.php?id_item=<?= $row['id'] ?>&id_checklist=<?= $id_checklist ?>" onclick="return confirm('Tem certeza que deseja excluir este item?');">Excluir</a>
+                                <a href="editar_item.php?id_item=<?= $row['id'] ?>&id_checklist=<?= $id_checklist ?>">Editar</a>
+                            </td>
+                        </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
 
-                        <a href="editar_item.php?id_item=<?= $row['id'] ?>&id_checklist=<?= $id_checklist ?>">Editar</a>
-                    </td>
-                </tr>
-            <?php endwhile; ?>
-        </table>
+            <div class="link-area">
+                <a href="index.php" class="back-link">⬅ Voltar ao Menu</a>
+            </div>
+        </section>
+    </main>
 
-        <a href="index.php" class="back-link">⬅ Voltar ao Menu</a>
-    </div>
+    <footer class="footer">
+        PUCPR - Engenharia de Software © <?= date("Y") ?>
+    </footer>
 </body>
 </html>

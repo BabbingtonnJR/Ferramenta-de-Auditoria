@@ -3,6 +3,7 @@ require 'conexao.php';
 $conn = conecta_db();
 
 $id_checklist = isset($_GET['id_checklist']) ? intval($_GET['id_checklist']) : 0;
+
 $msg = isset($_GET['msg']) ? $_GET['msg'] : '';
 
 // --- TRATAMENTO DO POST (CRIAR / ESTENDER / CONCLUIR) ---
@@ -136,101 +137,102 @@ if ($stmt) {
 }
 
 $conn->close();
+
 ?>
+
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Escalabilidade - Checklist <?= htmlspecialchars($checklist['nome'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></title>
-<style>
-body { font-family: Arial, sans-serif; background:#f5f7fa; margin:0; padding:0; }
-.container { max-width: 900px; margin: 40px auto; background:#fff; padding:30px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
-h1 { text-align:center; color:#004080; margin-top:0; }
-table { width:100%; border-collapse: collapse; margin-top:20px; }
-th, td { border:1px solid #ccc; padding:10px; text-align:center; }
-th { background:#e0e0e0; }
-input, select { padding:5px; border:1px solid #ccc; border-radius:6px; }
-button { background:#004080; color:white; padding:8px 15px; border:none; border-radius:6px; cursor:pointer; }
-button:hover { background:#0066cc; }
-.msg { text-align:center; font-weight:bold; margin:10px 0; }
-.back-link { display:block; text-align:center; margin-top:20px; color:#004080; text-decoration:none; }
-</style>
+<title>Escalabilidade - <?= htmlspecialchars($checklist['nome']) ?></title>
+<link rel="stylesheet" href="css/escalabilidade.css">
 </head>
 <body>
-<div class="container">
-<h1>Escalabilidade - Checklist: <?= htmlspecialchars($checklist['nome'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></h1>
+<header class="header">
+    <h1>📊 Escalabilidade - <?= htmlspecialchars($checklist['nome']) ?></h1>
+</header>
 
-<?php if (!empty($msg)): ?>
-    <div class="msg"><?= htmlspecialchars($msg, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></div>
-<?php endif; ?>
+<main class="main-content">
+    <div class="container">
+        <?php if ($msg): ?>
+            <div class="msg"><?= htmlspecialchars($msg) ?></div>
+        <?php endif; ?>
 
-<h2>Criar Nova Escalabilidade</h2>
-<form method="POST" action="">
-    <label>Prazo:</label>
-    <input type="datetime-local" name="prazo" required>
-    
-    <label>Responsável:</label>
-    <input type="text" name="responsavel" required>
-    
-    <label>Selecionar Itens Não Conformes:</label>
-    <?php if ($naoConformes->num_rows > 0): ?>
-        <?php while ($nc = $naoConformes->fetch_assoc()): ?>
-            <div>
-                <input type="checkbox" name="itens[]" value="<?= (int)$nc['id'] ?>" id="nc-<?= (int)$nc['id'] ?>">
-                <label for="nc-<?= (int)$nc['id'] ?>"><?= htmlspecialchars($nc['item_desc'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?> - <?= htmlspecialchars($nc['descricao_nc'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></label>
-            </div>
-        <?php endwhile; ?>
-    <?php else: ?>
-        <p>Nenhum item não conforme encontrado neste checklist.</p>
-    <?php endif; ?>
-    
-    <button type="submit" style="margin-top:10px;">Criar Escalabilidade</button>
-</form>
+        <section class="card">
+            <h2>Criar Nova Escalabilidade</h2>
+            <form method="POST">
+                <label>Prazo:</label>
+                <input type="datetime-local" name="prazo" required>
+                <label>Responsável:</label>
+                <input type="text" name="responsavel" required>
+                <label>Itens Não Conformes:</label>
+                <?php if ($naoConformes->num_rows > 0): ?>
+                    <?php while ($nc = $naoConformes->fetch_assoc()): ?>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="itens[]" value="<?= $nc['id'] ?>" id="nc-<?= $nc['id'] ?>">
+                            <label for="nc-<?= $nc['id'] ?>"><?= htmlspecialchars($nc['item_desc']) ?> - <?= htmlspecialchars($nc['descricao_nc']) ?></label>
+                        </div>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <p>Nenhum item não conforme.</p>
+                <?php endif; ?>
+                <button type="submit">Criar Escalabilidade</button>
+            </form>
+        </section>
 
-<h2>Escalabilidades Existentes</h2>
-<?php if ($escalabilidades->num_rows > 0): ?>
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>Item</th>
-            <th>Não Conformidade</th>
-            <th>Prazo</th>
-            <th>Responsável</th>
-            <th>Estado</th>
-        </tr>
-        <?php while ($esc = $escalabilidades->fetch_assoc()): ?>
-            <tr>
-                <td><?= (int)$esc['id'] ?></td>
-                <td><?= htmlspecialchars($esc['item_desc'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></td>
-                <td><?= htmlspecialchars($esc['descricao_nc'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></td>
-                <td><?= htmlspecialchars($esc['prazo'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></td>
-                <td><?= htmlspecialchars($esc['responsavel'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></td>
-                <td>
-                    <?= htmlspecialchars($esc['estado'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>
-                    <?php if ($esc['estado'] !== 'Concluida'): ?>
-                        <!-- Formulário para estender prazo -->
-                        <form method="POST" style="display:inline-block;">
-                            <input type="hidden" name="id_esc" value="<?= (int)$esc['id'] ?>">
-                            <input type="datetime-local" name="novo_prazo" required>
-                            <button type="submit" name="estender">Estender Prazo</button>
-                        </form>
+        <section class="card">
+            <h2>Escalabilidades Existentes</h2>
+            <?php if ($escalabilidades->num_rows > 0): ?>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Item</th>
+                        <th>Não Conformidade</th>
+                        <th>Prazo</th>
+                        <th>Responsável</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php while ($esc = $escalabilidades->fetch_assoc()): ?>
+                    <tr>
+                        <td><?= $esc['id'] ?></td>
+                        <td><?= htmlspecialchars($esc['item_desc']) ?></td>
+                        <td><?= htmlspecialchars($esc['descricao_nc']) ?></td>
+                        <td><?= htmlspecialchars($esc['prazo']) ?></td>
+                        <td><?= htmlspecialchars($esc['responsavel']) ?></td>
+                        <td>
+                            <?= htmlspecialchars($esc['estado']) ?>
+                            <?php if ($esc['estado'] !== 'Concluida'): ?>
+                                <form method="POST" style="display:inline-block">
+                                    <input type="hidden" name="id_esc" value="<?= $esc['id'] ?>">
+                                    <input type="datetime-local" name="novo_prazo" required>
+                                    <button type="submit" name="estender">Estender</button>
+                                </form>
+                                <form method="POST" style="display:inline-block">
+                                    <input type="hidden" name="id_esc" value="<?= $esc['id'] ?>">
+                                    <button type="submit" name="concluir">Concluir</button>
+                                </form>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                <?php endwhile; ?>
+                </tbody>
+            </table>
+            <?php else: ?>
+                <p>Nenhuma escalabilidade registrada.</p>
+            <?php endif; ?>
+        </section>
 
-                        <!-- Formulário para concluir -->
-                        <form method="POST" style="display:inline-block;">
-                            <input type="hidden" name="id_esc" value="<?= (int)$esc['id'] ?>">
-                            <button type="submit" name="concluir">Concluir</button>
-                        </form>
-                    <?php endif; ?>
-                </td>
-            </tr>
-        <?php endwhile; ?>
-    </table>
-<?php else: ?>
-    <p>Nenhuma escalabilidade encontrada para este checklist.</p>
-<?php endif; ?>
+        <a href="acessar_checklist.php?id_checklist=<?= $id_checklist?>" class="back-link">⬅ Voltar a Checklist</a>
+    </div>
+</main>
 
-<a href="lista_checklist.php" class="back-link">⬅ Voltar à Lista de Checklists</a>
-</div>
+<footer class="footer">
+    PUCPR - Engenharia de Software © <?= date("Y") ?>
+</footer>
 </body>
 </html>

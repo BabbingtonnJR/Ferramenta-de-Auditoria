@@ -1,0 +1,62 @@
+* { margin:0; padding:0; box-sizing:border-box; font-family:"Segoe UI",Tahoma,Verdana,sans-serif; }
+
+html, body { height: 100%; }
+
+body { 
+    background:#F4F4F4; 
+    color:#333; 
+    display: flex; 
+    flex-direction: column; 
+}
+
+.container { 
+    max-width:1000px; 
+    margin:20px auto; 
+    padding:30px; 
+    background:#FFFFFF; 
+    border-radius:12px; 
+    box-shadow:0 2px 10px rgba(0,0,0,0.1); 
+    flex: 1; /* Faz a container ocupar o espaço disponível */
+}
+
+.header {
+    background: #800000;
+    color: #fff;
+    padding: 1rem 20px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    border-radius: 12px 12px 0 0; /* deixa arredondado somente na parte superior */
+    margin-bottom: 20px;
+}
+
+.header h1 {
+    font-size: 1.5rem;
+    color: white;
+}
+
+h1 { text-align:center; color:#800000; margin-bottom:20px; }
+
+table { width:100%; border-collapse:collapse; }
+th, td { border:1px solid #ccc; padding:10px; text-align:left; }
+th { background:#E6E6E6; color:#800000; }
+tbody tr:nth-child(even) { background:#F9F9F9; }
+
+button { background:#800000; color:#fff; padding:6px 12px; border:none; border-radius:6px; cursor:pointer; transition:0.3s; }
+button:hover { background:#a00000; }
+
+.email-form { display:none; margin-top:5px; padding:10px; border:1px solid #ccc; background:#F9F9F9; border-radius:6px; }
+.email-form input, .email-form textarea, .email-form button { width:100%; margin-bottom:5px; padding:8px; border-radius:6px; border:1px solid #ccc; }
+
+.msg { text-align:center; font-weight:bold; margin:10px 0; color:#800000; }
+.back-link { display:block; text-align:center; margin-top:20px; color:#800000; text-decoration:none; }
+.back-link:hover { text-decoration:underline; }
+.no-data { text-align:center; margin-top:20px; font-style:italic; color:#666; }
+
+/* Footer */
+.footer {
+    background: #800000;
+    color: #fff;
+    text-align: center;
+    padding: 0.8rem;
+    font-size: 0.9rem;
+}

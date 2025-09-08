@@ -128,245 +128,97 @@ function e($value) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Itens do Checklist</title>
-    <style>
-       body {
-            font-family: Arial, sans-serif;
-            background: #f5f7fa;
-            margin: 0;
-            padding: 0;
-        }
-
-        .container {
-            max-width: 700px;
-            margin: 40px auto;
-            background: #fff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            text-align: center;
-            color: #004080;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        input,
-        select {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-        }
-
-        button {
-            background: #004080;
-            color: white;
-            padding: 10px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #0066cc;
-        }
-
-        .msg {
-            text-align: center;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-
-        table,
-        th,
-        td {
-            border: 1px solid #ccc;
-        }
-
-        th,
-        td {
-            padding: 10px;
-            text-align: center;
-        }
-
-        .back-link {
-            display: block;
-            text-align: center;
-            margin-top: 20px;
-            color: #004080;
-            text-decoration: none;
-        }
-
-        .nao-conformidade-fields {
-            text-align: left;
-        }
-
-        .nao-conformidade-fields label,
-        .nao-conformidade-fields input,
-        .nao-conformidade-fields textarea {
-            display: block;
-            width: 95%;
-            margin-bottom: 5px;
-        }
-
-        /* Estilo normal da página já existente aqui... */
-
-        /* Estilo para impressão */
-        @media print {
-            /* Ocultar tudo que não é relatório */
-            body * {
-                visibility: hidden;
-            }
-
-            /* Mostrar apenas o container do relatório */
-            #relatorio, #relatorio * {
-                visibility: visible;
-            }
-
-            /* Garantir que o container fique no topo da página impressa */
-            #relatorio {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-            }
-
-            /* Ocultar botões dentro do relatório */
-            #relatorio button,
-            #relatorio a {
-                display: none;
-            }
-        }
-
-    </style>
-    
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <div class="container">
-    <h1>Checklist: <?= e($checklist['nome'])?></h1>
-    <p><strong>Descrição:</strong> <?= e($checklist['descricao'])?></p>
+    <!-- Header -->
+    <header class="header">
+        <h1>📋 Checklist - PUCPR</h1>
+    </header>
 
-    <?php if (isset($_GET['msg'])): ?>
-        <div class="msg"><?= e($_GET['msg'])?></div>
-    <?php endif; ?>
+    <!-- Conteúdo -->
+    <main class="main-content">
+        <section class="card">
+            <h2><?= e($checklist['nome']) ?></h2>
+            <p><strong>Descrição:</strong> <?= e($checklist['descricao']) ?></p>
 
-    <h2>Itens do Checklist</h2>
-    <form method="POST" action="acessar_checklist.php?id_checklist=<?= $id_checklist ?>">
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Descrição</th>
-                    <th>Conformidade</th>
-                    <th>Detalhes Não Conformidade</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-            <?php foreach ($itens as $row): ?>
-                <tr id="item-row-<?= $row['id'] ?>">
-                    <td><?= $row['numero_item'] ?></td>
-                    <td><?= e($row['descricao'])?></td>
-                    <td>
-                        <select name="conformidade[<?= $row['id'] ?>]" onchange="mostrarNaoConformidade(this, '<?= $row['id'] ?>')">
-                            <option value="">Selecione uma opção</option>
-                            <option value="Nao Aplicavel" <?= ($row['conformidade'] == 'Nao Aplicavel' || $row['conformidade'] == '') ? 'selected' : '' ?>>Não Aplicável</option>
-                            <option value="Sim" <?= ($row['conformidade'] == 'Sim') ? 'selected' : '' ?>>Sim</option>
-                            <option value="Nao" <?= ($row['conformidade'] == 'Nao') ? 'selected' : '' ?>>Não</option>
-                        </select>
-                    </td>
-                    <td class="nao-conformidade-fields">
-                        <!-- Bloco para Não Conformidade -->
-                        <div id="nao-conformidade-<?= $row['id'] ?>" style="display: <?= ($row['conformidade'] == 'Nao') ? 'block' : 'none' ?>;">
-                            <label>Descrição:</label>
-                            <textarea name="descricao_nc[<?= $row['id'] ?>]" rows="2"><?= e($row['descricao_nc']) ?></textarea>
-                            <label>Estado:</label>
-                            <input type="text" name="estado_nc[<?= $row['id'] ?>]" value="<?= e($row['estado_nc']) ?>">
-                            <label>Prioridade:</label>
-                            <input type="text" name="prioridade_nc[<?= $row['id'] ?>]" value="<?= e($row['prioridade_nc']) ?>">
-                        </div>
+            <?php if (isset($_GET['msg'])): ?>
+                <div class="msg"><?= e($_GET['msg']) ?></div>
+            <?php endif; ?>
 
-                        <!-- Bloco para Não Aplicável -->
-                        <div id="nao-aplicavel-<?= $row['id'] ?>" style="display: <?= ($row['conformidade'] == 'Nao Aplicavel') ? 'block' : 'none' ?>;">
-                        </div>
+            <form method="POST" action="">
+                <table class="styled-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Descrição</th>
+                            <th>Conformidade</th>
+                            <th>Não Conformidade</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($itens as $row): ?>
+                        <tr>
+                            <td><?= $row['numero_item'] ?></td>
+                            <td><?= e($row['descricao']) ?></td>
+                            <td>
+                                <select name="conformidade[<?= $row['id'] ?>]" onchange="mostrarNaoConformidade(this, '<?= $row['id'] ?>')">
+                                    <option value="">Selecione</option>
+                                    <option value="Nao Aplicavel" <?= ($row['conformidade']=='Nao Aplicavel')?'selected':'' ?>>Não Aplicável</option>
+                                    <option value="Sim" <?= ($row['conformidade']=='Sim')?'selected':'' ?>>Sim</option>
+                                    <option value="Nao" <?= ($row['conformidade']=='Nao')?'selected':'' ?>>Não</option>
+                                </select>
+                            </td>
+                            <td>
+                                <div id="nao-conformidade-<?= $row['id'] ?>" style="display: <?= ($row['conformidade']=='Nao')?'block':'none' ?>;">
+                                    <label>Descrição:</label>
+                                    <textarea name="descricao_nc[<?= $row['id'] ?>]" rows="2"><?= e($row['descricao_nc']) ?></textarea>
+                                    <label>Estado:</label>
+                                    <input type="text" name="estado_nc[<?= $row['id'] ?>]" value="<?= e($row['estado_nc']) ?>">
+                                    <label>Prioridade:</label>
+                                    <input type="text" name="prioridade_nc[<?= $row['id'] ?>]" value="<?= e($row['prioridade_nc']) ?>">
+                                </div>
+                            </td>
+                            <td>
+                                <a href="excluir_item.php?id_item=<?= $row['id'] ?>&id_checklist=<?= $id_checklist ?>" onclick="return confirm('Tem certeza?')">Excluir</a> |
+                                <a href="editar_item.php?id_item=<?= $row['id'] ?>&id_checklist=<?= $id_checklist ?>">Editar</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
 
-                    </td>
+                <button type="submit" style="margin-top: 15px;">Salvar Conformidade</button>
+            </form>
 
-                    <td>
-                        <a href="excluir_item.php?id_item=<?= $row['id'] ?>&id_checklist=<?= $id_checklist ?>" onclick="return confirm('Tem certeza que deseja excluir este item?');">Excluir</a>
-                        <a href="editar_item.php?id_item=<?= $row['id'] ?>&id_checklist=<?= $id_checklist ?>">Editar</a>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-            </tbody>
-        </table>
-        <div class="container" id="relatorio">
-            <h1>Checklist: <?= e($checklist['nome'])?></h1>
-            <p><strong>Descrição:</strong> <?= e($checklist['descricao']) ?></p>
+            <!-- Relatório de aderência -->
+            <section class="report">
+                <h3>Relatório de Aderência</h3>
+                <p><strong>Total de Itens Avaliados:</strong> <?= $total_itens ?></p>
+                <p><strong>Total de Itens Conformes:</strong> <?= $total_conformes ?></p>
+                <p><strong>Percentual de Aderência:</strong> <?= $percentual_aderencia ?>%</p>
+                <button onclick="window.print()">🖨️ Imprimir Relatório</button>
+            </section>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Descrição</th>
-                        <th>Conformidade</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($itens as $row): ?>
-                    <tr>
-                        <td><?= $row['numero_item'] ?></td>
-                        <td><?= e($row['descricao'])?></td>
-                        <td><?= e($row['conformidade']) ?></td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+            <div class="link-area">
+                <a href="acessar_nao_conformidade.php?id_checklist=<?= $checklist['id'] ?>" class="back-link">⬅ Acessar Não Conformidades</a>
+                <a href="acessar_escalabilidade.php?id_checklist=<?= $checklist['id'] ?> " class="back-link" >⬅ Escalonamentos</a>
+                <a href="lista_checklist.php" class="back-link">⬅ Voltar a lista de checklists</a>
+            </div>
+        </section>
+    </main>
 
-            <h2>Relatório de Aderência</h2>
-            <p><strong>Total de Itens Avaliados:</strong> <?= $total_itens ?></p>
-            <p><strong>Total de Itens Conformes:</strong> <?= $total_conformes ?></p>
-            <p><strong>Percentual de Aderência:</strong> <?= $percentual_aderencia ?>%</p>
-        </div>
+    <!-- Footer -->
+    <footer class="footer">
+        PUCPR - Engenharia de Software © <?= date("Y") ?>
+    </footer>
 
-<!-- Botão para imprimir -->
-<button onclick="window.print()">🖨️ Imprimir Relatório</button>
-
-
-        <button type="submit" style="margin-top: 15px;">Salvar Conformidade</button>
-    </form>
-
-    <a href="acessar_nao_conformidade.php" class="back-link">⬅ Acessar não conformidades</a>
-    <a href="acessar_escalabilidade.php?id_checklist=<?= $checklist['id'] ?>">Escalonamentos</a>
-    <a href="index.php" class="back-link">⬅ Voltar ao Menu</a>
-</div>
-
-<script>
-function mostrarNaoConformidade(selectElement, id_item) {
-    const blocoNC = document.getElementById('nao-conformidade-' + id_item);
-    const blocoNA = document.getElementById('nao-aplicavel-' + id_item);
-
-    if (selectElement.value === 'Nao') {
-        blocoNC.style.display = 'block';
-        blocoNA.style.display = 'none';
-    } else if (selectElement.value === 'Nao Aplicavel') {
-        blocoNC.style.display = 'none';
-        blocoNA.style.display = 'block';
-    } else {
-        blocoNC.style.display = 'none';
-        blocoNA.style.display = 'none';
-    }
-}
-</script>
+    <script>
+    function mostrarNaoConformidade(selectElement, id_item) {
+        const blocoNC = document.getElementById('nao-conformidade-' + id_item);
+        blocoNC.style.display = selectElement.value === 'Nao' ? 'block' : 'none';
+    }
+    </script>
+</body>
+</html>
