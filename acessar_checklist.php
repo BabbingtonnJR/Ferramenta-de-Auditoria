@@ -46,12 +46,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['conformidade'])) {
             $stmt_check_nc->close();
 
         } else {
-            // Se a conformidade não for 'Nao', remove a não conformidade, se existir
-            $sql_delete_nc = "DELETE FROM naoConformidade WHERE id_item = ?";
-            $stmt_delete_nc = $conn->prepare($sql_delete_nc);
-            $stmt_delete_nc->bind_param("i", $id_item);
-            $stmt_delete_nc->execute();
-            $stmt_delete_nc->close();
+            // Se a conformidade não for 'Nao', marca a não conformidade como resolvida, se existir
+            $sql_update_nc = "UPDATE naoConformidade SET estado = 'Resolvida' WHERE id_item = ?";
+            $stmt_update_nc = $conn->prepare($sql_update_nc);
+            $stmt_update_nc->bind_param("i", $id_item);
+            $stmt_update_nc->execute();
+            $stmt_update_nc->close();
         }
     }
     
@@ -100,6 +100,22 @@ $itens = $stmt->get_result();
 $stmt->close();
 
 $conn->close();
+
+// Calcular % de aderência
+$total_itens = 0;
+$total_conformes = 0;
+
+foreach ($itens as $item) {
+    if ($item['conformidade'] != 'Nao Aplicavel') {
+        $total_itens++;
+        if ($item['conformidade'] == 'Sim') {
+            $total_conformes++;
+        }
+    }
+}
+
+$percentual_aderencia = ($total_itens > 0) ? round(($total_conformes / $total_itens) * 100, 2) : 0;
+
 ?>
 
 <!DOCTYPE html>
@@ -201,6 +217,35 @@ $conn->close();
             margin-bottom: 5px;
         }
 
+        /* Estilo normal da página já existente aqui... */
+
+        /* Estilo para impressão */
+        @media print {
+            /* Ocultar tudo que não é relatório */
+            body * {
+                visibility: hidden;
+            }
+
+            /* Mostrar apenas o container do relatório */
+            #relatorio, #relatorio * {
+                visibility: visible;
+            }
+
+            /* Garantir que o container fique no topo da página impressa */
+            #relatorio {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+
+            /* Ocultar botões dentro do relatório */
+            #relatorio button,
+            #relatorio a {
+                display: none;
+            }
+        }
+
     </style>
     
 </head>
@@ -226,8 +271,8 @@ $conn->close();
                 </tr>
             </thead>
             <tbody>
-            <?php while ($row = $itens->fetch_assoc()): ?>
-                <tr id="item-row-<?= $row['id'] ?>">
+            <?php foreach ($itens as $row): ?>
+                <tr id="item-row-<?= $row['id'] ?>">
                     <td><?= $row['numero_item'] ?></td>
                     <td><?= htmlspecialchars($row['descricao']) ?></td>
                     <td>
@@ -238,6 +283,7 @@ $conn->close();
                         </select>
                     </td>
                     <td class="nao-conformidade-fields">
+                        <!-- Bloco para Não Conformidade -->
                         <div id="nao-conformidade-<?= $row['id'] ?>" style="display: <?= ($row['conformidade'] == 'Nao') ? 'block' : 'none' ?>;">
                             <label>Descrição:</label>
                             <textarea name="descricao_nc[<?= $row['id'] ?>]" rows="2"><?= htmlspecialchars($row['descricao_nc'] ?? '') ?></textarea>
@@ -246,34 +292,76 @@ $conn->close();
                             <label>Prioridade:</label>
                             <input type="text" name="prioridade_nc[<?= $row['id'] ?>]" value="<?= htmlspecialchars($row['prioridade_nc'] ?? '') ?>">
                         </div>
+
+                        <!-- Bloco para Não Aplicável -->
+                        <div id="nao-aplicavel-<?= $row['id'] ?>" style="display: <?= ($row['conformidade'] == 'Nao Aplicavel') ? 'block' : 'none' ?>;">
+                        </div>
+
                     </td>
+
                     <td>
                         <a href="excluir_item.php?id_item=<?= $row['id'] ?>&id_checklist=<?= $id_checklist ?>" onclick="return confirm('Tem certeza que deseja excluir este item?');">Excluir</a>
                         <a href="editar_item.php?id_item=<?= $row['id'] ?>&id_checklist=<?= $id_checklist ?>">Editar</a>
                     </td>
                 </tr>
-            <?php endwhile; ?>
+            <?php endforeach; ?>
             </tbody>
         </table>
+        <div class="container" id="relatorio">
+            <h1>Checklist: <?= htmlspecialchars($checklist['nome']) ?></h1>
+            <p><strong>Descrição:</strong> <?= htmlspecialchars($checklist['descricao']) ?></p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Descrição</th>
+                        <th>Conformidade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($itens as $row): ?>
+                    <tr>
+                        <td><?= $row['numero_item'] ?></td>
+                        <td><?= htmlspecialchars($row['descricao']) ?></td>
+                        <td><?= htmlspecialchars($row['conformidade']) ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+
+            <h2>Relatório de Aderência</h2>
+            <p><strong>Total de Itens Avaliados:</strong> <?= $total_itens ?></p>
+            <p><strong>Total de Itens Conformes:</strong> <?= $total_conformes ?></p>
+            <p><strong>Percentual de Aderência:</strong> <?= $percentual_aderencia ?>%</p>
+        </div>
+
+<!-- Botão para imprimir -->
+<button onclick="window.print()">🖨️ Imprimir Relatório</button>
+
+
         <button type="submit" style="margin-top: 15px;">Salvar Conformidade</button>
     </form>
 
     <a href="acessar_nao_conformidade.php" class="back-link">⬅ Acessar não conformidades</a>
-    <a href="acessar_escalabilidade.php" class="back-link">⬅ Administrar escalabilidades</a>
+    <a href="acessar_escalabilidade.php?id_checklist=<?= $checklist['id'] ?>">Escalonamentos</a>
     <a href="index.php" class="back-link">⬅ Voltar ao Menu</a>
 </div>
 
 <script>
 function mostrarNaoConformidade(selectElement, id_item) {
-    const formRow = document.getElementById('nao-conformidade-' + id_item);
-    if (selectElement.value === 'Nao') {
-        formRow.style.display = 'block';
-    } else {
-        formRow.style.display = 'none';
-        // Limpar os campos ao esconder
-        formRow.querySelector('textarea').value = '';
-        formRow.querySelector('input[name*="estado_nc"]').value = '';
-        formRow.querySelector('input[name*="prioridade_nc"]').value = '';
-    }
+    const blocoNC = document.getElementById('nao-conformidade-' + id_item);
+    const blocoNA = document.getElementById('nao-aplicavel-' + id_item);
+
+    if (selectElement.value === 'Nao') {
+        blocoNC.style.display = 'block';
+        blocoNA.style.display = 'none';
+    } else if (selectElement.value === 'Nao Aplicavel') {
+        blocoNC.style.display = 'none';
+        blocoNA.style.display = 'block';
+    } else {
+        blocoNC.style.display = 'none';
+        blocoNA.style.display = 'none';
+    }
 }
 </script>

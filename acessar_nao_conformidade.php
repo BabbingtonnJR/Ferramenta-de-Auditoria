@@ -29,7 +29,6 @@ $sql = "
         nc.data_criacao DESC";
 
 $result = $conn->query($sql);
-
 $conn->close();
 ?>
 
@@ -48,7 +47,15 @@ $conn->close();
         th { background: #e0e0e0; }
         .msg { text-align: center; font-weight: bold; margin: 10px 0; }
         .back-link { display: block; text-align: center; margin-top: 20px; color: #004080; text-decoration: none; }
+        .email-form { margin-top: 5px; border: 1px solid #ccc; padding: 8px; background: #f9f9f9; display: none; }
+        .email-form input, .email-form textarea, .email-form button { display: block; width: 95%; margin-bottom: 5px; padding: 5px; }
     </style>
+    <script>
+        function toggleEmailForm(id) {
+            const form = document.getElementById('email-form-' + id);
+            form.style.display = (form.style.display === 'block') ? 'none' : 'block';
+        }
+    </script>
 </head>
 <body>
     <div class="container">
@@ -68,6 +75,7 @@ $conn->close();
                     <th>Estado</th>
                     <th>Prioridade</th>
                     <th>Data de Criação</th>
+                    <th>Ações</th>
                 </tr>
                 <?php while ($row = $result->fetch_assoc()): ?>
                     <tr>
@@ -78,6 +86,32 @@ $conn->close();
                         <td><?= htmlspecialchars($row['estado']) ?></td>
                         <td><?= htmlspecialchars($row['prioridade']) ?></td>
                         <td><?= $row['data_criacao'] ?></td>
+                        <td>
+                            <button type="button" onclick="toggleEmailForm(<?= $row['id_nao_conformidade'] ?>)">Enviar Email</button>
+                            <div class="email-form" id="email-form-<?= $row['id_nao_conformidade'] ?>">
+                                <form method="POST" action="enviar_email_nc.php">
+                                    <input type="hidden" name="id_nc" value="<?= $row['id_nao_conformidade'] ?>">
+
+                                    <label>Destinatário:</label>
+                                    <input type="email" name="destinatario" required>
+
+                                    <label>Assunto:</label>
+                                    <input type="text" name="assunto" value="Não Conformidade Auditoria" required>
+
+                                    <label>Mensagem:</label>
+                                    <textarea name="mensagem" rows="6"><?= 
+                                        "Checklist: " . htmlspecialchars($row['nome_checklist']) . "\n" .
+                                        "Item: " . htmlspecialchars($row['descricao_item']) . "\n" .
+                                        "Estado: " . htmlspecialchars($row['estado']) . "\n" .
+                                        "Prioridade: " . htmlspecialchars($row['prioridade']) . "\n" .
+                                        "Data de Criação: " . $row['data_criacao'] . "\n\n" .
+                                        "Descrição da NC:\n" . htmlspecialchars($row['descricao_nao_conformidade']);
+                                    ?></textarea>
+
+                                    <button type="submit">Enviar Email</button>
+                                </form>
+                            </div>
+                        </td>
                     </tr>
                 <?php endwhile; ?>
             </table>
