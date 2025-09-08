@@ -43,32 +43,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["arquivo"])) {
     exit();
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Importar Checklist</title>
-    <style>
-        body { font-family: Arial, sans-serif; background:#f5f7fa; margin:0; padding:0; }
-        .container { max-width:600px; margin:40px auto; background:#fff; padding:30px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
-        h1 { text-align:center; color:#004080; }
-        form { display:flex; flex-direction:column; gap:15px; }
-        input[type="file"] { padding:10px; border:1px solid #ccc; border-radius:6px; }
-        button { background:#004080; color:white; padding:10px; border:none; border-radius:6px; cursor:pointer; }
-        button:hover { background:#0066cc; }
-        .back-link { display:block; text-align:center; margin-top:20px; color:#004080; text-decoration:none; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Importar Checklist</title>
+<link rel="stylesheet" href="css/importar.css">
+<style>
+
+</style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>Importar Checklist</h1>
-        <form action="importar_checklist.php" method="POST" enctype="multipart/form-data">
-            <input type="file" name="arquivo" accept=".json" required>
-            <button type="submit">Importar</button>
-        </form>
-        <a href="index.php" class="back-link">⬅ Voltar ao Menu</a>
-    </div>
+    <header class="header">
+        <h1>📥 Importar Checklist</h1>
+    </header>
+
+<div class="container">
+    <form action="importar_checklist.php" method="POST" enctype="multipart/form-data">
+        <input type="file" name="arquivo" accept=".json" required>
+        <button type="submit">Importar</button>
+    </form>
+    <a href="index.php" class="back-link">⬅ Voltar ao Menu</a>
+</div>
+
+<footer class="footer">
+    PUCPR - Engenharia de Software © <?= date("Y") ?>
+</footer>
 </body>
 </html>
