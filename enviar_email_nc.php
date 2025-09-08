@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
         $mail->Username = "checklistes1@gmail.com"; // AQUI TAMBEM VAI SEU EMAIL
-        $mail->Password = 'jmop cguu gjbe fiyp'; //AQUI VAI A SENHA DO APP OU CHAVE
+        $mail->Password = 'udtj zrfs cemz dqua'; //AQUI VAI A SENHA DO APP OU CHAVE
         $mail->SMTPSecure = 'tls';
         $mail->Port = 587;
 
