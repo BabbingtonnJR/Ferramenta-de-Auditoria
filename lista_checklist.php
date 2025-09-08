@@ -48,8 +48,8 @@ $conn->close();
                         <td><?= $row['data_criacao'] ?></td>
                         <td>
                             <a href="itens.php?id_checklist=<?= $row['id'] ?>">Editar</a>
-                            <a href="itens.php?id_checklist=<?= $row['id'] ?>">Excluir</a>
-                            <a href="itens.php?id_checklist=<?= $row['id'] ?>">Acessar</a>
+                            <a href="excluir_checklist.php?id_checklist=<?= $row['id'] ?>">Excluir</a>
+                            <a href="acessar_checklist.php?id_checklist=<?= $row['id'] ?>">Acessar</a>
                         </td>
                     </tr>
                 <?php endwhile; ?>

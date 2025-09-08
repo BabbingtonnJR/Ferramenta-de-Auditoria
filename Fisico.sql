@@ -12,7 +12,7 @@ CREATE TABLE Checklist (
 CREATE TABLE Item (
 	id INT AUTO_INCREMENT PRIMARY KEY,
     descricao VARCHAR(100) NOT NULL,
-    conformidade VARCHAR(30) NOT NULL,
+    conformidade VARCHAR(30),
     numero_item INT NOT NULL
 );
 

@@ -20,7 +20,6 @@ if (!$checklist) {
 // Se o formulário for enviado para adicionar item
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $descricao = $_POST["descricao"];
-    $conformidade = $_POST["conformidade"];
 
     // 1. Descobre o próximo número do item no checklist
     $sql_numero = "
@@ -37,9 +36,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt_num->close();
 
     // 2. Insere o item
-    $sql_item = "INSERT INTO Item (descricao, conformidade, numero_item) VALUES (?, ?, ?)";
+    $sql_item = "INSERT INTO Item (descricao, numero_item) VALUES (?, ?)";
     $stmt = $conn->prepare($sql_item);
-    $stmt->bind_param("ssi", $descricao, $conformidade, $numero_item);
+    $stmt->bind_param("si", $descricao, $numero_item);
 
     if ($stmt->execute()) {
         $id_item = $stmt->insert_id;
@@ -68,7 +67,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 // Buscar todos os itens já cadastrados para esse checklist
 $sql_itens = "
-    SELECT i.id, i.descricao, i.conformidade, numero_item
+    SELECT i.id, i.descricao, i.numero_item
     FROM Item i
     INNER JOIN Item_checklist ic ON i.id = ic.id_item
     WHERE ic.id_checklist = ?";
@@ -165,13 +164,6 @@ $conn->close();
         <h2>Adicionar Novo Item</h2>
         <form method="POST" action="">
             <input type="text" name="descricao" placeholder="Descrição do Item" required>
-            
-            <select name="conformidade" required>
-                <option value="">Selecione Conformidade</option>
-                <option value="Sim">Sim</option>
-                <option value="Não">Não</option>
-                <option value="Não se aplica">Não se aplica</option>
-            </select>
 
             <button type="submit">Adicionar Item</button>
         </form>
@@ -181,13 +173,17 @@ $conn->close();
             <tr>
                 <th>ID</th>
                 <th>Descrição</th>
-                <th>Conformidade</th>
+                <th>Ações</th>
             </tr>
             <?php while ($row = $itens->fetch_assoc()): ?>
                 <tr>
                     <td><?= $row['numero_item'] ?></td>
                     <td><?= htmlspecialchars($row['descricao']) ?></td>
-                    <td><?= htmlspecialchars($row['conformidade']) ?></td>
+                    <td>
+                        <a href="excluir_item.php?id_item=<?= $row['id'] ?>&id_checklist=<?= $id_checklist ?>" onclick="return confirm('Tem certeza que deseja excluir este item?');">Excluir</a>
+
+                        <a href="editar_item.php?id_item=<?= $row['id'] ?>&id_checklist=<?= $id_checklist ?>">Editar</a>
+                    </td>
                 </tr>
             <?php endwhile; ?>
         </table>
