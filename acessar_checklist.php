@@ -99,6 +99,15 @@ $stmt->execute();
 $itens = $stmt->get_result();
 $stmt->close();
 
+// Buscar prazos do checklist
+$sql_prazos = "SELECT id, nome, dias FROM Prazo WHERE id_checklist = ? order by dias desc";
+$stmt = $conn->prepare($sql_prazos);
+$stmt->bind_param("i", $id_checklist);
+$stmt->execute();
+$prazos = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+
 $conn->close();
 
 // Calcular % de aderência
@@ -177,7 +186,16 @@ function e($value) {
                                     <label>Estado:</label>
                                     <input type="text" name="estado_nc[<?= $row['id'] ?>]" value="<?= e($row['estado_nc']) ?>">
                                     <label>Prioridade:</label>
-                                    <input type="text" name="prioridade_nc[<?= $row['id'] ?>]" value="<?= e($row['prioridade_nc']) ?>">
+                                    <select name="prioridade_nc[<?= $row['id'] ?>]">
+                                        <option value="">Selecione</option>
+                                        <?php foreach ($prazos as $prazo): ?>
+                                            <option value="<?= e($prazo['nome']) ?>" 
+                                                <?= ($row['prioridade_nc'] == $prazo['nome']) ? 'selected' : '' ?>>
+                                                <?= e($prazo['nome']) ?> (<?= e($prazo['dias']) ?> dias)
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+
                                 </div>
                             </td>
                             <td>
