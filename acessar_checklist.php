@@ -61,7 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['conformidade'])) {
 }
 
 // Verifica se checklist existe
-$sql_checklist = "SELECT * FROM Checklist WHERE id = ?";
+$sql_checklist = "SELECT id, nome, descricao FROM Checklist WHERE id = ?";
 $stmt = $conn->prepare($sql_checklist);
 $stmt->bind_param("i", $id_checklist);
 $stmt->execute();

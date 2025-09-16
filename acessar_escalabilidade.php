@@ -3,31 +3,31 @@ require 'conexao.php';
 $conn = conecta_db();
 
 $id_checklist = isset($_GET['id_checklist']) ? intval($_GET['id_checklist']) : 0;
-
 $msg = isset($_GET['msg']) ? $_GET['msg'] : '';
 
-// --- TRATAMENTO DO POST (CRIAR / ESTENDER / CONCLUIR) ---
+// --- TRATAMENTO DO POST (CRIAR / CONCLUIR) ---
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     // Criar nova escalabilidade
-    if (!empty($_POST['prazo']) && !empty($_POST['responsavel']) && !empty($_POST['itens']) && is_array($_POST['itens'])) {
+    if (!empty($_POST['prazo']) && !empty($_POST['responsavel']) && !empty($_POST['superior_responsavel']) && !empty($_POST['itens']) && is_array($_POST['itens'])) {
         $prazo_input = $_POST['prazo'];
         // converte datetime-local (ex: 2025-09-08T15:30) para formato MySQL 'Y-m-d H:i:s'
         $prazo = date('Y-m-d H:i:s', strtotime($prazo_input));
         $responsavel = trim($_POST['responsavel']);
+        $superior = trim($_POST['superior_responsavel']);
         $itens = $_POST['itens']; // array de ids de não conformidade
 
         foreach ($itens as $id_nc_raw) {
             $id_nc = intval($id_nc_raw);
             if ($id_nc <= 0) continue;
 
-            $sql_insert = "INSERT INTO Escalonamento (id_nc, prazo, estado, responsavel) VALUES (?, ?, 'Em Andamento', ?)";
+            $sql_insert = "INSERT INTO Escalonamento (id_nc, prazo, estado, responsavel, superior_responsavel) VALUES (?, ?, 'Em Andamento', ?, ?)";
             $stmt_insert = $conn->prepare($sql_insert);
             if ($stmt_insert === false) {
                 $msg = "❌ Erro interno (prepare): " . $conn->error;
                 break;
             }
-            $stmt_insert->bind_param("iss", $id_nc, $prazo, $responsavel);
+            $stmt_insert->bind_param("isss", $id_nc, $prazo, $responsavel, $superior);
             if (!$stmt_insert->execute()) {
                 $msg = "❌ Erro ao criar escalonamento: " . $stmt_insert->error;
                 $stmt_insert->close();
@@ -39,49 +39,64 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         if ($msg === '') $msg = "✅ Escalonamento(s) criado(s) com sucesso!";
     }
 
-    // Estender prazo
-    if (isset($_POST['estender'], $_POST['id_esc'], $_POST['novo_prazo'])) {
-        $id_esc = intval($_POST['id_esc']);
-        $novo_prazo_input = $_POST['novo_prazo'];
-        $novo_prazo = date('Y-m-d H:i:s', strtotime($novo_prazo_input));
-
-        $stmt = $conn->prepare("UPDATE Escalonamento SET prazo = ? WHERE id = ?");
-        if ($stmt) {
-            $stmt->bind_param("si", $novo_prazo, $id_esc);
-            if ($stmt->execute()) {
-                $msg = "✅ Prazo da escalabilidade atualizado!";
-            } else {
-                $msg = "❌ Erro ao atualizar prazo: " . $stmt->error;
-            }
-            $stmt->close();
-        } else {
-            $msg = "❌ Erro interno (prepare update prazo): " . $conn->error;
-        }
-    }
-
     // Concluir escalabilidade
-    if (isset($_POST['concluir'], $_POST['id_esc'])) {
-        $id_esc = intval($_POST['id_esc']);
-        $stmt = $conn->prepare("UPDATE Escalonamento SET estado = 'Concluida', data_conclusao = NOW() WHERE id = ?");
-        if ($stmt) {
-            $stmt->bind_param("i", $id_esc);
-            if ($stmt->execute()) {
-                $msg = "✅ Escalabilidade concluída!";
-            } else {
-                $msg = "❌ Erro ao concluir escalabilidade: " . $stmt->error;
+if (isset($_POST['concluir'], $_POST['id_esc'])) {
+    $id_esc = intval($_POST['id_esc']);
+
+    // 1. Atualiza o escalonamento
+    $stmt = $conn->prepare("UPDATE Escalonamento SET estado = 'Concluida', data_conclusao = NOW() WHERE id = ?");
+    if ($stmt) {
+        $stmt->bind_param("i", $id_esc);
+        if ($stmt->execute()) {
+
+            // 2. Busca item e nc relacionados
+            $sql_find = "
+                SELECT i.id AS id_item, nc.id AS id_nc
+                FROM Escalonamento e
+                INNER JOIN naoConformidade nc ON e.id_nc = nc.id
+                INNER JOIN Item i ON nc.id_item = i.id
+                WHERE e.id = ?
+            ";
+            $stmt_find = $conn->prepare($sql_find);
+            $stmt_find->bind_param("i", $id_esc);
+            $stmt_find->execute();
+            $res = $stmt_find->get_result();
+
+            if ($row = $res->fetch_assoc()) {
+                $id_item = $row['id_item'];
+                $id_nc   = $row['id_nc'];
+
+                // 3. Marca o item como conforme
+                $stmt_item = $conn->prepare("UPDATE Item SET conformidade = 'Sim' WHERE id = ?");
+                $stmt_item->bind_param("i", $id_item);
+                $stmt_item->execute();
+                $stmt_item->close();
+
+                // 4. Marca a não conformidade como resolvida
+                $stmt_nc = $conn->prepare("UPDATE naoConformidade SET estado = 'Resolvida' WHERE id = ?");
+                $stmt_nc->bind_param("i", $id_nc);
+                $stmt_nc->execute();
+                $stmt_nc->close();
             }
-            $stmt->close();
+            $stmt_find->close();
+
+            $msg = "✅ Escalabilidade concluída e não conformidade resolvida!";
         } else {
-            $msg = "❌ Erro interno (prepare update concluir): " . $conn->error;
+            $msg = "❌ Erro ao concluir escalabilidade: " . $stmt->error;
         }
+        $stmt->close();
+    } else {
+        $msg = "❌ Erro interno (prepare update concluir): " . $conn->error;
     }
+}
+
 
     // Redireciona com mensagem (PRG)
     header("Location: acessar_escalabilidade.php?id_checklist=$id_checklist&msg=" . urlencode($msg));
     exit();
 }
 
-// --- BUSCAR A CHECKLIST (IMPORTANTE: evita os avisos que você estava tendo) ---
+// --- BUSCAR A CHECKLIST ---
 $sql_checklist = "SELECT id, nome, descricao FROM Checklist WHERE id = ?";
 $stmt = $conn->prepare($sql_checklist);
 if ($stmt) {
@@ -95,7 +110,6 @@ if ($stmt) {
 }
 
 if (!$checklist) {
-    // Checklist não encontrada — exibe mensagem simples e encerra
     $conn->close();
     die("<p>❌ Checklist não encontrada. <a href='lista_checklist.php'>Voltar</a></p>");
 }
@@ -117,9 +131,9 @@ if ($stmt) {
     die("Erro ao preparar consulta de não conformidades: " . $conn->error);
 }
 
-// --- Buscar escalabilidades já criadas do checklist ---
+// --- Buscar escalabilidades já criadas do checklist (inclui superior_responsavel) ---
 $sql_escal = "
-SELECT e.id, nc.id AS nc_id, i.descricao AS item_desc, nc.descricao AS descricao_nc, e.prazo, e.estado, e.responsavel
+SELECT e.id, nc.id AS nc_id, i.descricao AS item_desc, nc.descricao AS descricao_nc, e.prazo, e.estado, e.responsavel, e.superior_responsavel
 FROM Escalonamento e
 INNER JOIN naoConformidade nc ON e.id_nc = nc.id
 INNER JOIN Item i ON nc.id_item = i.id
@@ -137,9 +151,7 @@ if ($stmt) {
 }
 
 $conn->close();
-
 ?>
-
 
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -165,8 +177,13 @@ $conn->close();
             <form method="POST">
                 <label>Prazo:</label>
                 <input type="datetime-local" name="prazo" required>
+
                 <label>Responsável:</label>
                 <input type="text" name="responsavel" required>
+
+                <label>Superior Responsável:</label>
+                <input type="text" name="superior_responsavel" required>
+
                 <label>Itens Não Conformes:</label>
                 <?php if ($naoConformes->num_rows > 0): ?>
                     <?php while ($nc = $naoConformes->fetch_assoc()): ?>
@@ -193,6 +210,7 @@ $conn->close();
                         <th>Não Conformidade</th>
                         <th>Prazo</th>
                         <th>Responsável</th>
+                        <th>Superior</th>
                         <th>Estado</th>
                     </tr>
                 </thead>
@@ -202,16 +220,12 @@ $conn->close();
                         <td><?= $esc['id'] ?></td>
                         <td><?= htmlspecialchars($esc['item_desc']) ?></td>
                         <td><?= htmlspecialchars($esc['descricao_nc']) ?></td>
-                        <td><?= htmlspecialchars($esc['prazo']) ?></td>
+                        <td><strong><?= htmlspecialchars($esc['prazo']) ?></strong></td>
                         <td><?= htmlspecialchars($esc['responsavel']) ?></td>
+                        <td><?= htmlspecialchars($esc['superior_responsavel']) ?></td>
                         <td>
                             <?= htmlspecialchars($esc['estado']) ?>
                             <?php if ($esc['estado'] !== 'Concluida'): ?>
-                                <form method="POST" style="display:inline-block">
-                                    <input type="hidden" name="id_esc" value="<?= $esc['id'] ?>">
-                                    <input type="datetime-local" name="novo_prazo" required>
-                                    <button type="submit" name="estender">Estender</button>
-                                </form>
                                 <form method="POST" style="display:inline-block">
                                     <input type="hidden" name="id_esc" value="<?= $esc['id'] ?>">
                                     <button type="submit" name="concluir">Concluir</button>
@@ -231,8 +245,4 @@ $conn->close();
     </div>
 </main>
 
-<footer class="footer">
-    PUCPR - Engenharia de Software © <?= date("Y") ?>
-</footer>
-</body>
-</html>
+<foote

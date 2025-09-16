@@ -29,7 +29,7 @@ CREATE TABLE naoConformidade (
 CREATE TABLE Prazo (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(50) NOT NULL,
-    dias INT NOT NULL
+    dias INT NOT NULL,
     id_checklist INT NOT NULL,
     FOREIGN KEY (id_checklist) REFERENCES Checklist(id)
 );
