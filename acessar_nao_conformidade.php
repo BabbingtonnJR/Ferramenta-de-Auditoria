@@ -24,25 +24,36 @@ if (!$checklist) {
 // Buscar NCs com classificação
 $sql = "
     SELECT 
-        nc.id AS id_nc,
-        nc.descricao AS descricao_nc,
-        nc.estado,
-        nc.prioridade,
-        nc.data_criacao,
-        i.descricao AS descricao_item,
-        p.nome AS classificacao,
-        p.dias AS prazo_dias
-    FROM naoConformidade nc
-    INNER JOIN Item i ON nc.id_item = i.id
-    INNER JOIN Item_checklist ic ON i.id = ic.id_item
-    LEFT JOIN Prazo p ON nc.id_prazo = p.id
-    WHERE ic.id_checklist = ?
-    ORDER BY nc.data_criacao DESC
+    nc.id AS id_nc,
+    nc.descricao AS descricao_nc,
+    nc.estado,
+    nc.prioridade,
+    nc.data_criacao,
+    i.descricao AS descricao_item,
+    p.nome AS classificacao,
+    p.dias AS prazo_dias
+FROM naoConformidade nc
+INNER JOIN Item i ON nc.id_item = i.id
+INNER JOIN Item_checklist ic ON ic.id_item = i.id
+LEFT JOIN Prazo p ON nc.id_prazo = p.id
+WHERE ic.id_checklist = ?
+ORDER BY nc.data_criacao DESC;
 ";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $id_checklist);
 $stmt->execute();
 $result = $stmt->get_result();
+// Buscar as prioridades definidas (Prazos)
+$prazos = [];
+$result_prazos = $conn->query("SELECT id, nome, dias FROM Prazo");
+
+if ($result_prazos && $result_prazos->num_rows > 0) {
+    while ($prazo = $result_prazos->fetch_assoc()) {
+        $prazos[] = $prazo;
+    }
+}
+
+
 $stmt->close();
 $conn->close();
 ?>
@@ -125,10 +136,9 @@ button:hover { background:#a00000; }
                     <tr>
                         <td class="label">Classificação:</td>
                         <td colspan="3">
-                            <input type="text" 
-                                name="classificacao" 
-                                value="<?= htmlspecialchars(($row['classificacao'] ?? '') . (!empty($row['prazo_dias']) ? ' - ' . $row['prazo_dias'] . ' dias' : '')) ?>" 
-                                readonly>
+                            <?= htmlspecialchars($row['prioridade']) ?> 
+                            (<?= htmlspecialchars($row['prazo_dias']) ?> dias)
+                            <input type="hidden" name="prioridade_nc[<?= $row['id_nc'] ?>]" value="<?= htmlspecialchars($row['prioridade']) ?>">
                         </td>
                     </tr>
                     <tr>

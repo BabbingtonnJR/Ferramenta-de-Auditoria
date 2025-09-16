@@ -2,9 +2,9 @@
 
 
 function conecta_db(){
-    $host = "localhost:3308";
+    $host = "localhost:3307";
     $user = "root"; // coloque seu usuário do MySQL
-    $pass = "root";     // coloque sua senha do MySQL
+    $pass = "";     // coloque sua senha do MySQL
     $db   = "ChecklistAuditoria";
     $conn = new mysqli($host, $user, $pass, $db);
 

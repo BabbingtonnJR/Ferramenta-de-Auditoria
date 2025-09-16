@@ -29,7 +29,7 @@ $sql = "
         c.nome AS nome_checklist,
         p.nome AS classificacao,
         e.responsavel AS responsavel_db,
-        e.prazo AS prazo_db
+        P.dias AS prazo_db
     FROM naoConformidade nc
     INNER JOIN Item i ON nc.id_item = i.id
     INNER JOIN Item_checklist ic ON i.id = ic.id_item
@@ -43,10 +43,11 @@ $sql = "
             GROUP BY id_nc
         ) e2 ON e1.id_nc = e2.id_nc AND e1.prazo = e2.max_prazo
     ) e ON e.id_nc = nc.id
-    LEFT JOIN Prazo p ON p.id = e.id_prazo
+    LEFT JOIN Prazo p ON p.id = nc.id_prazo
     WHERE nc.id = ?
     LIMIT 1
 ";
+
 
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $id_nc);
@@ -86,7 +87,7 @@ $mensagem = "
 📈 <strong>Estado:</strong> ".htmlspecialchars($nc['estado'])."<br>
 📝 <strong>Item de Checklist:</strong> ".htmlspecialchars($nc['descricao_item'])."<br>
 📝 <strong>Descrição da NC:</strong> ".htmlspecialchars($nc['descricao_nc'])."<br>
-🏷 <strong>Classificação:</strong> ".htmlspecialchars($nc['classificacao'] ?? 'Não definida')."<br>
+🏷 <strong>Classificação:</strong> ".htmlspecialchars($nc['classificacao'] ?? 'Não definida')("Dias: " htmlspecialchars($prazo['prazo_db']))."<br>
 ⚙ <strong>Ação Corretiva Indicada:</strong> ".htmlspecialchars($acao_corretiva)."<br>
 </body>
 </html>
