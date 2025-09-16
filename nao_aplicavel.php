@@ -2,7 +2,6 @@
 require 'conexao.php';
 $conn = conecta_db();
 
-// Buscar todos os itens Não Aplicáveis
 $sql = "
     SELECT 
         i.id AS id_item,

@@ -10,7 +10,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $prazos_nome = $_POST["prazo_nome"];
     $prazos_dias = $_POST["prazo_dias"];
 
-    // Validação extra: garantir que pelo menos um prazo foi enviado
     if (empty($prazos_nome) || count($prazos_nome) == 0) {
         $msg = "❌ É obrigatório cadastrar pelo menos um prazo!";
     } else {
@@ -22,8 +21,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $last_id = $conn->insert_id;
             $stmt->close();
 
-            // Inserir prazos vinculados
-           // Inserir prazos vinculados
             $sqlPrazo = "INSERT INTO Prazo (nome, dias, id_checklist) VALUES (?, ?, ?)";
             $stmtPrazo = $conn->prepare($sqlPrazo);
 
@@ -57,12 +54,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <!-- Cabeçalho -->
     <header class="header">
         <h1>📋 Criar Checklist</h1>
     </header>
 
-    <!-- Conteúdo -->
     <main class="main-content">
         <section class="card">
             <form method="POST" action="">
@@ -100,7 +95,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </section>
     </main>
 
-    <!-- Rodapé -->
     <footer class="footer">
         <p>PUCPR - Engenharia de Software © <?= date("Y") ?></p>
     </footer>

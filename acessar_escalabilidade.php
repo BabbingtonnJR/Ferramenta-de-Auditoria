@@ -5,17 +5,14 @@ $conn = conecta_db();
 $id_checklist = isset($_GET['id_checklist']) ? intval($_GET['id_checklist']) : 0;
 $msg = isset($_GET['msg']) ? $_GET['msg'] : '';
 
-// --- TRATAMENTO DO POST (CRIAR / CONCLUIR) ---
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
-    // Criar nova escalabilidade
     if (!empty($_POST['prazo']) && !empty($_POST['responsavel']) && !empty($_POST['superior_responsavel']) && !empty($_POST['itens']) && is_array($_POST['itens'])) {
         $prazo_input = $_POST['prazo'];
-        // converte datetime-local (ex: 2025-09-08T15:30) para formato MySQL 'Y-m-d H:i:s'
         $prazo = date('Y-m-d H:i:s', strtotime($prazo_input));
         $responsavel = trim($_POST['responsavel']);
         $superior = trim($_POST['superior_responsavel']);
-        $itens = $_POST['itens']; // array de ids de não conformidade
+        $itens = $_POST['itens']; 
 
         foreach ($itens as $id_nc_raw) {
             $id_nc = intval($id_nc_raw);
@@ -39,17 +36,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         if ($msg === '') $msg = "✅ Escalonamento(s) criado(s) com sucesso!";
     }
 
-    // Concluir escalabilidade
 if (isset($_POST['concluir'], $_POST['id_esc'])) {
     $id_esc = intval($_POST['id_esc']);
 
-    // 1. Atualiza o escalonamento
     $stmt = $conn->prepare("UPDATE Escalonamento SET estado = 'Concluida', data_conclusao = NOW() WHERE id = ?");
     if ($stmt) {
         $stmt->bind_param("i", $id_esc);
         if ($stmt->execute()) {
 
-            // 2. Busca item e nc relacionados
             $sql_find = "
                 SELECT i.id AS id_item, nc.id AS id_nc
                 FROM Escalonamento e
@@ -66,13 +60,11 @@ if (isset($_POST['concluir'], $_POST['id_esc'])) {
                 $id_item = $row['id_item'];
                 $id_nc   = $row['id_nc'];
 
-                // 3. Marca o item como conforme
                 $stmt_item = $conn->prepare("UPDATE Item SET conformidade = 'Sim' WHERE id = ?");
                 $stmt_item->bind_param("i", $id_item);
                 $stmt_item->execute();
                 $stmt_item->close();
 
-                // 4. Marca a não conformidade como resolvida
                 $stmt_nc = $conn->prepare("UPDATE naoConformidade SET estado = 'Resolvida' WHERE id = ?");
                 $stmt_nc->bind_param("i", $id_nc);
                 $stmt_nc->execute();
@@ -91,12 +83,10 @@ if (isset($_POST['concluir'], $_POST['id_esc'])) {
 }
 
 
-    // Redireciona com mensagem (PRG)
     header("Location: acessar_escalabilidade.php?id_checklist=$id_checklist&msg=" . urlencode($msg));
     exit();
 }
 
-// --- BUSCAR A CHECKLIST ---
 $sql_checklist = "SELECT id, nome, descricao FROM Checklist WHERE id = ?";
 $stmt = $conn->prepare($sql_checklist);
 if ($stmt) {
@@ -114,7 +104,6 @@ if (!$checklist) {
     die("<p>❌ Checklist não encontrada. <a href='lista_checklist.php'>Voltar</a></p>");
 }
 
-// --- Buscar itens não conformes do checklist ---
 $sql_nc = "
 SELECT nc.id, i.descricao AS item_desc, nc.descricao AS descricao_nc
 FROM naoConformidade nc
@@ -131,7 +120,6 @@ if ($stmt) {
     die("Erro ao preparar consulta de não conformidades: " . $conn->error);
 }
 
-// --- Buscar escalabilidades já criadas do checklist (inclui superior_responsavel) ---
 $sql_escal = "
 SELECT e.id, nc.id AS nc_id, i.descricao AS item_desc, nc.descricao AS descricao_nc, e.prazo, e.estado, e.responsavel, e.superior_responsavel
 FROM Escalonamento e
@@ -245,4 +233,8 @@ $conn->close();
     </div>
 </main>
 
-<foote
+<footer class="footer">
+    PUCPR - Engenharia de Software © <?= date("Y") ?>
+</footer>
+</body>
+</html>

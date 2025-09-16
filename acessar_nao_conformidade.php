@@ -6,10 +6,73 @@ $id_checklist = isset($_GET['id_checklist']) ? intval($_GET['id_checklist']) : 0
 $msg = isset($_GET['msg']) ? htmlspecialchars($_GET['msg']) : '';
 
 if ($id_checklist <= 0) {
-    die("❌ Checklist não especificada. <a href='lista_checklist.php'>Voltar</a>");
+    header("Location: acessar_checklist.php?msg=" . urlencode("❌ Checklist não especificada."));
+    exit;
 }
 
-// Buscar nome do checklist
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['concluir'], $_POST['id_nc'])) {
+    $id_nc = intval($_POST['id_nc']);
+    $email_superior = $_POST['email_superior'] ?? '';
+
+    $stmt = $conn->prepare("UPDATE naoConformidade SET estado = 'Resolvida', data_conclusao = NOW() WHERE id = ?");
+    $stmt->bind_param("i", $id_nc);
+    $stmt->execute();
+    $stmt->close();
+
+    $stmt_item = $conn->prepare("
+        UPDATE Item i
+        INNER JOIN naoConformidade nc ON nc.id_item = i.id
+        SET i.conformidade = 'Sim'
+        WHERE nc.id = ?
+    ");
+    $stmt_item->bind_param("i", $id_nc);
+    $stmt_item->execute();
+    $stmt_item->close();
+
+    $stmt_check = $conn->prepare("
+        SELECT nc.descricao AS nc_desc, i.descricao AS item_desc, p.dias, nc.data_criacao
+        FROM naoConformidade nc
+        INNER JOIN Item i ON nc.id_item = i.id
+        LEFT JOIN Prazo p ON nc.id_prazo = p.id
+        WHERE nc.id = ?
+    ");
+    $stmt_check->bind_param("i", $id_nc);
+    $stmt_check->execute();
+    $res_check = $stmt_check->get_result();
+    $nc_info = $res_check->fetch_assoc();
+    $stmt_check->close();
+
+    $prazo_vencido = false;
+    if (!empty($nc_info['dias'])) {
+        $data_prazo = date('Y-m-d H:i:s', strtotime($nc_info['data_criacao'] . " +{$nc_info['dias']} days"));
+        if (new DateTime() > new DateTime($data_prazo)) {
+            $prazo_vencido = true;
+        }
+    }
+
+    if ($prazo_vencido && !empty($email_superior)) {
+        $stmt_escal = $conn->prepare("
+            INSERT INTO Escalonamento (id_nc, prazo, superior_responsavel, email_superior, estado, responsavel)
+            VALUES (?, NOW(), ?, ?, 'Em Andamento', ?)
+        ");
+        $stmt_escal->bind_param("isss", $id_nc, $nc_info['item_desc'], $email_superior, $nc_info['item_desc']);
+        $stmt_escal->execute();
+        $stmt_escal->close();
+
+        $assunto = "Escalonamento de Não Conformidade: {$nc_info['nc_desc']}";
+        $mensagem = "A não conformidade '{$nc_info['nc_desc']}' não foi concluída dentro do prazo. Itens:\n- {$nc_info['item_desc']}\n\nEscalonamento criado automaticamente.";
+        $headers = "From: no-reply@empresa.com\r\n";
+        mail($email_superior, $assunto, $mensagem, $headers);
+
+        $msg = "✅ Não conformidade concluída! Escalonamento criado e e-mail enviado ao superior.";
+    } else {
+        $msg = "✅ Não conformidade concluída com sucesso!";
+    }
+
+    header("Location: acessar_nao_conformidade.php?id_checklist=$id_checklist&msg=" . urlencode($msg));
+    exit();
+}
+
 $stmt_checklist = $conn->prepare("SELECT nome FROM Checklist WHERE id = ?");
 $stmt_checklist->bind_param("i", $id_checklist);
 $stmt_checklist->execute();
@@ -18,12 +81,12 @@ $checklist = $result_checklist->fetch_assoc();
 $stmt_checklist->close();
 
 if (!$checklist) {
-    die("❌ Checklist não encontrada. <a href='lista_checklist.php'>Voltar</a>");
+    header("Location: acessar_checklist.php?msg=" . urlencode("❌ Checklist não encontrada."));
+    exit;
 }
 
-// Buscar NCs com classificação
 $sql = "
-    SELECT 
+SELECT 
     nc.id AS id_nc,
     nc.descricao AS descricao_nc,
     nc.estado,
@@ -36,23 +99,22 @@ FROM naoConformidade nc
 INNER JOIN Item i ON nc.id_item = i.id
 INNER JOIN Item_checklist ic ON ic.id_item = i.id
 LEFT JOIN Prazo p ON nc.id_prazo = p.id
-WHERE ic.id_checklist = ?
+WHERE ic.id_checklist = ? 
+  AND nc.estado != 'Resolvida'
 ORDER BY nc.data_criacao DESC;
 ";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $id_checklist);
 $stmt->execute();
 $result = $stmt->get_result();
-// Buscar as prioridades definidas (Prazos)
+
 $prazos = [];
 $result_prazos = $conn->query("SELECT id, nome, dias FROM Prazo");
-
 if ($result_prazos && $result_prazos->num_rows > 0) {
     while ($prazo = $result_prazos->fetch_assoc()) {
         $prazos[] = $prazo;
     }
 }
-
 
 $stmt->close();
 $conn->close();
@@ -73,7 +135,7 @@ h2 { color:#800000; }
 .table-form th { background:#eee; text-align:left; }
 .label { font-weight:bold; }
 textarea, input, select { width:100%; padding:6px; border:1px solid #ccc; border-radius:4px; }
-button { background:#800000; color:#fff; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; }
+button { background:#800000; color:#fff; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; margin-right:5px; }
 button:hover { background:#a00000; }
 .msg { text-align:center; color:#800000; margin:10px 0; font-weight:bold; }
 .footer { background:#800000; color:#fff; text-align:center; padding:10px; margin-top:20px; }
@@ -93,7 +155,7 @@ button:hover { background:#a00000; }
 
     <?php if ($result->num_rows > 0): ?>
         <?php while ($row = $result->fetch_assoc()): ?>
-            <form method="POST" action="enviar_email_nc.php">
+            <form method="POST" action="enviar_email_nc.php" style="display:inline-block; vertical-align:top;">
                 <input type="hidden" name="id_nc" value="<?= $row['id_nc'] ?>">
 
                 <table class="table-form">
@@ -103,7 +165,6 @@ button:hover { background:#a00000; }
                     <tr>
                         <td class="label">Projeto:</td>
                         <td><?= htmlspecialchars($checklist['nome']) ?></td>
-                        
                         <td class="label">Data da Solicitação:</td>
                         <td><?= $row['data_criacao'] ?></td>
                     </tr>
@@ -114,8 +175,6 @@ button:hover { background:#a00000; }
                         <td><input type="text" name="rqa" value=""></td>
                     </tr>
                     <tr>
-                        <td class="label">Prazo de Resolução:</td>
-                        <td><input type="date" name="prazo"></td>
                         <td class="label">Estado:</td>
                         <td>
                             <select name="estado">
@@ -149,8 +208,18 @@ button:hover { background:#a00000; }
                         <td class="label">Email do Destinatário:</td>
                         <td colspan="3"><input type="email" name="destinatario" required></td>
                     </tr>
+                    <tr>
+                        <td class="label">Email do Superior:</td>
+                        <td colspan="3"><input type="email" name="email_superior" required></td>
+                    </tr>
                 </table>
                 <button type="submit">✉ Enviar Email</button>
+            </form>
+
+            <form method="POST" style="display:inline-block; margin-top:5px;">
+                <input type="hidden" name="id_nc" value="<?= $row['id_nc'] ?>">
+                <input type="hidden" name="email_superior" value="">
+                <button type="submit" name="concluir">✅ Concluir</button>
             </form>
             <hr>
         <?php endwhile; ?>

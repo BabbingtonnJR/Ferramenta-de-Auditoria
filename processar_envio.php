@@ -8,7 +8,6 @@ $destinatario = $_POST['email_destinatario'];
 $remetente = $_POST['email_remetente'];
 $descricao = nl2br(htmlspecialchars($_POST['descricao']));
 
-// Buscar nome do checklist e item
 $sql = "
     SELECT i.numero_item, i.descricao AS descricao_item, c.nome AS nome_checklist
     FROM Item i
@@ -47,7 +46,6 @@ $headers = "MIME-Version: 1.0" . "\r\n";
 $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
 $headers .= "From: $remetente";
 
-// Enviar email
 if (mail($destinatario, $assunto, $mensagem, $headers)) {
     $sql_email = "INSERT INTO Email (id_nc, email_destinatario, email_remetente) VALUES (NULL, ?, ?)";
     $stmt = $conn->prepare($sql_email);

@@ -4,7 +4,6 @@ require 'conexao.php';
 $conn = conecta_db();
 
 use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     die("❌ Requisição inválida!");
@@ -17,7 +16,6 @@ if ($id_nc <= 0 || empty($destinatario)) {
     die("❌ Todos os campos são obrigatórios!");
 }
 
-// Buscar dados da NC e Checklist com o último escalonamento
 $sql = "
     SELECT 
     nc.id AS id_nc,
@@ -29,7 +27,7 @@ $sql = "
     c.nome AS nome_checklist,
     p.nome AS classificacao,
     e.responsavel AS responsavel_db,
-    P.dias AS prazo_db,
+    p.dias AS prazo_db,
     DATE_ADD(nc.data_criacao, INTERVAL p.dias DAY) AS data_entrega
 FROM naoConformidade nc
 INNER JOIN Item i ON nc.id_item = i.id
@@ -47,9 +45,7 @@ LEFT JOIN (
 LEFT JOIN Prazo p ON p.id = nc.id_prazo
 WHERE nc.id = ?
 LIMIT 1
-
 ";
-
 
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $id_nc);
@@ -60,18 +56,15 @@ $stmt->close();
 
 if (!$nc) die("❌ Não conformidade não encontrada!");
 
-// Prioridade de valores: POST (form) -> banco (Escalonamento / NC) -> fallback
 $responsavel = !empty($_POST['responsavel']) ? trim($_POST['responsavel']) : ($nc['responsavel_db'] ?? 'Não definido');
-$rqa = !empty($_POST['rqa']) ? trim($_POST['rqa']) : ($nc['prioridade'] ?? '---'); // se você tiver coluna específica, ajuste aqui
+$rqa = !empty($_POST['rqa']) ? trim($_POST['rqa']) : ($nc['prioridade'] ?? '---');
 $acao_corretiva = !empty($_POST['acao']) ? trim($_POST['acao']) : ($nc['prioridade'] ?? '---');
 $prazo = !empty($_POST['prazo']) ? trim($_POST['prazo']) : ($nc['prazo_db'] ?? null);
 
-// Se o prazo veio em formato YYYY-MM-DD (input type=date), converte para DATETIME
 if (!empty($prazo) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $prazo)) {
     $prazo = $prazo . ' 23:59:59';
 }
 
-// Monta assunto e corpo (HTML)
 $remetente = 'checklistes1@gmail.com';
 $assunto = "Solicitação de Resolução de Não Conformidade #".$nc['id_nc'];
 
@@ -96,41 +89,34 @@ $mensagem = "
 </html>
 ";
 
+$mail = new PHPMailer();
+$mail->CharSet = 'UTF-8';
+$mail->isSMTP();
+$mail->Host = 'smtp.gmail.com';
+$mail->SMTPAuth = true;
+$mail->Username = $remetente;
+$mail->Password = 'udtj zrfs cemz dqua';
+$mail->SMTPSecure = 'tls';
+$mail->Port = 587;
 
+$mail->setFrom($remetente, 'Auditoria');
+$mail->addAddress($destinatario);
 
+$mail->isHTML(true);
+$mail->Subject = $assunto;
+$mail->Body    = $mensagem;
 
-// Envio via PHPMailer (cria o objeto ANTES de usar métodos)
-$mail = new PHPMailer(true);
-try {
-    $mail->CharSet = 'UTF-8';
-    $mail->isSMTP();
-    $mail->Host = 'smtp.gmail.com';
-    $mail->SMTPAuth = true;
-    $mail->Username = $remetente;
-    $mail->Password = 'udtj zrfs cemz dqua'; // sua app password
-    $mail->SMTPSecure = 'tls';
-    $mail->Port = 587;
-
-    $mail->setFrom($remetente, 'Auditoria');
-    $mail->addAddress($destinatario);
-
-    $mail->isHTML(true);
-    $mail->Subject = $assunto;
-    $mail->Body    = $mensagem;
-
-    $mail->send();
-
-    // Salvar envio no banco
+if (!$mail->send()) {
+    die("❌ Erro ao enviar email: " . $mail->ErrorInfo);
+} else {
     $stmt = $conn->prepare("INSERT INTO Email (id_nc, email_destinatario, email_remetente) VALUES (?, ?, ?)");
     $stmt->bind_param("iss", $id_nc, $destinatario, $remetente);
     $stmt->execute();
     $stmt->close();
 
     $conn->close();
-    header("Location: acessar_nao_conformidade.php?msg=" . urlencode("✅ Email enviado com sucesso!"));
+    header("Location: acessar_checklist.php?msg=" . urlencode("✅ Email enviado com sucesso!"));
     exit;
-} catch (Exception $e) {
-    // Em caso de erro, dá informação útil
-    die("❌ Erro ao enviar email: " . $mail->ErrorInfo);
+
 }
 ?>

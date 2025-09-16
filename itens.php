@@ -5,7 +5,6 @@ $conn = conecta_db();
 $id_checklist = isset($_GET['id_checklist']) ? intval($_GET['id_checklist']) : 0;
 $msg = "";
 
-// Verifica se checklist existe
 $sql_checklist = "SELECT * FROM Checklist WHERE id = ?";
 $stmt = $conn->prepare($sql_checklist);
 $stmt->bind_param("i", $id_checklist);
@@ -17,11 +16,9 @@ if (!$checklist) {
     die("❌ Checklist não encontrada.");
 }
 
-// Se o formulário for enviado para adicionar item
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $descricao = $_POST["descricao"];
 
-    // 1. Descobre o próximo número do item no checklist
     $sql_numero = "
         SELECT COALESCE(MAX(i.numero_item), 0) + 1 AS proximo
         FROM Item i
@@ -35,7 +32,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $numero_item = $row_num['proximo'];
     $stmt_num->close();
 
-    // 2. Insere o item
     $sql_item = "INSERT INTO Item (descricao, numero_item) VALUES (?, ?)";
     $stmt = $conn->prepare($sql_item);
     $stmt->bind_param("si", $descricao, $numero_item);
@@ -43,7 +39,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($stmt->execute()) {
         $id_item = $stmt->insert_id;
 
-        // 3. Relaciona o item com o checklist
         $sql_relacao = "INSERT INTO Item_checklist (id_checklist, id_item) VALUES (?, ?)";
         $stmt_rel = $conn->prepare($sql_relacao);
         $stmt_rel->bind_param("ii", $id_checklist, $id_item);
@@ -65,7 +60,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     exit();
 }
 
-// Buscar todos os itens já cadastrados para esse checklist
 $sql_itens = "
     SELECT i.id, i.descricao, i.numero_item
     FROM Item i

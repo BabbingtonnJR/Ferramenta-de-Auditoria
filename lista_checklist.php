@@ -2,7 +2,6 @@
 require 'conexao.php';
 $conn = conecta_db();
 
-// Buscar todas as checklists
 $sql = "SELECT id, nome, descricao, data_criacao FROM Checklist ORDER BY data_criacao DESC";
 $result = $conn->query($sql);
 

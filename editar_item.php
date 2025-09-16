@@ -6,7 +6,6 @@ $id_item = isset($_GET['id_item']) ? intval($_GET['id_item']) : 0;
 $id_checklist = isset($_GET['id_checklist']) ? intval($_GET['id_checklist']) : 0;
 $msg = "";
 
-// Lógica de processamento do formulário de edição
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id_item_form'])) {
     $id_item_form = intval($_POST['id_item_form']);
     $nova_descricao = $_POST['nova_descricao'];
@@ -33,7 +32,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id_item_form'])) {
     exit();
 }
 
-// Lógica para exibir o formulário de edição
 $item = null;
 if ($id_item > 0 && $id_checklist > 0) {
     $sql_item = "SELECT id, descricao FROM Item WHERE id = ?";

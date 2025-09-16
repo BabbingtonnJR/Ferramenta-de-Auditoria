@@ -7,12 +7,10 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <!-- Cabeçalho -->
     <header class="header">
         <h1>📋 Sistema de Auditoria - PUCPR</h1>
     </header>
 
-    <!-- Conteúdo principal -->
     <main class="main-content">
         <section class="card">
             <h2>Selecione uma opção</h2>
@@ -24,7 +22,6 @@
         </section>
     </main>
 
-    <!-- Rodapé -->
     <footer class="footer">
         <p>PUCPR - Engenharia de Software © <?= date("Y") ?></p>
     </footer>

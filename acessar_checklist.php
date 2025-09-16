@@ -5,23 +5,19 @@
     $id_checklist = isset($_GET['id_checklist']) ? intval($_GET['id_checklist']) : 0;
     $msg = "";
 
-    // Lógica de salvamento dos dados (conformidade e não conformidade)
     if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['conformidade'])) {
         foreach ($_POST['conformidade'] as $id_item => $status) {
-            // Primeiro, atualiza a conformidade na tabela Item
             $sql_update_conformidade = "UPDATE Item SET conformidade = ? WHERE id = ?";
             $stmt_update_conformidade = $conn->prepare($sql_update_conformidade);
             $stmt_update_conformidade->bind_param("si", $status, $id_item);
             $stmt_update_conformidade->execute();
             $stmt_update_conformidade->close();
             
-            // Se a conformidade for 'Nao', insere na tabela naoConformidade
             if ($status == 'Nao') {
                 $descricao_nc = $_POST['descricao_nc'][$id_item];
                 $estado_nc = $_POST['estado_nc'][$id_item];
                 $prioridade_nc = $_POST['prioridade_nc'][$id_item];
                 
-                // Verifica se a não conformidade já existe para evitar duplicatas
                 $sql_check_nc = "SELECT id FROM naoConformidade WHERE id_item = ?";
                 $stmt_check_nc = $conn->prepare($sql_check_nc);
                 $stmt_check_nc->bind_param("i", $id_item);
@@ -29,8 +25,6 @@
                 $result_check_nc = $stmt_check_nc->get_result();
                 
                 if ($result_check_nc->num_rows == 0) {
-                    // Insere nova não conformidade
-                   // Descobre o id do prazo baseado no nome e id_checklist
                     $sql_get_prazo = "SELECT id FROM Prazo WHERE nome = ? AND id_checklist = ?";
                     $stmt_get_prazo = $conn->prepare($sql_get_prazo);
                     $stmt_get_prazo->bind_param("si", $prioridade_nc, $id_checklist);
@@ -43,7 +37,6 @@
                     }
                     $stmt_get_prazo->close();
 
-                    // Insere nova não conformidade com id_prazo
                     $sql_insert_nc = "INSERT INTO naoConformidade (id_item, id_prazo, descricao, estado, prioridade) VALUES (?, ?, ?, ?, ?)";
                     $stmt_insert_nc = $conn->prepare($sql_insert_nc);
                     $stmt_insert_nc->bind_param("iisss", $id_item, $id_prazo, $descricao_nc, $estado_nc, $prioridade_nc);
@@ -51,8 +44,6 @@
                     $stmt_insert_nc->close();
 
                 } else {
-                    // Atualiza a não conformidade existente
-                    // Atualiza a não conformidade existente com novo id_prazo
                     $sql_update_nc = "UPDATE naoConformidade SET descricao = ?, estado = ?, prioridade = ?, id_prazo = ? WHERE id_item = ?";
                     $stmt_update_nc = $conn->prepare($sql_update_nc);
                     $stmt_update_nc->bind_param("sssii", $descricao_nc, $estado_nc, $prioridade_nc, $id_prazo, $id_item);
@@ -62,7 +53,6 @@
                 $stmt_check_nc->close();
 
             } else {
-                // Se a conformidade não for 'Nao', marca a não conformidade como resolvida, se existir
                 $sql_update_nc = "UPDATE naoConformidade SET estado = 'Resolvida' WHERE id_item = ?";
                 $stmt_update_nc = $conn->prepare($sql_update_nc);
                 $stmt_update_nc->bind_param("i", $id_item);
@@ -76,7 +66,6 @@
         exit();
     }
 
-    // Verifica se checklist existe
     $sql_checklist = "SELECT id, nome, descricao FROM Checklist WHERE id = ?";
     $stmt = $conn->prepare($sql_checklist);
     $stmt->bind_param("i", $id_checklist);
@@ -89,7 +78,6 @@
         die("❌ Checklist não encontrada.");
     }
 
-    // Buscar todos os itens e os dados de não conformidade
     $sql_itens = "
         SELECT 
             i.id, 
@@ -115,7 +103,6 @@
     $itens = $stmt->get_result();
     $stmt->close();
 
-    // Buscar prazos do checklist
     $sql_prazos = "SELECT id, nome, dias FROM Prazo WHERE id_checklist = ? order by dias desc";
     $stmt = $conn->prepare($sql_prazos);
     $stmt->bind_param("i", $id_checklist);
@@ -126,7 +113,6 @@
 
     $conn->close();
 
-    // Calcular % de aderência
     $total_itens = 0;
     $total_conformes = 0;
 
@@ -152,16 +138,70 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <title>Itens do Checklist</title>
         <link rel="stylesheet" href="css/styles.css">
+
+
+
+        <style>
+@media print {
+    body { font-family: Arial, sans-serif; color: #000; background: #fff; }
+    header, footer, .back-link, button { display: none !important; }
+    .main-content { margin: 0; padding: 0; }
+    table.styled-table { width: 100%; border-collapse: collapse; font-size: 12pt; margin-bottom: 20px; }
+    table.styled-table th, table.styled-table td { border: 1px solid #333; padding: 6px; }
+    .report { page-break-inside: avoid; margin-bottom: 20px; }
+    canvas {
+        display: block !important;
+        margin: 0 auto 20px !important;
+        max-width: 600px !important;
+        max-height: 300px !important;
+    }
+}
+
+</style>
+
     </head>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('graficoAderencia').getContext('2d');
+const grafico = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['Conformes', 'Não Conformes'],
+        datasets: [{
+            label: 'Itens',
+            data: [<?= $total_conformes ?>, <?= $total_itens - $total_conformes ?>],
+            backgroundColor: ['#4CAF50', '#F44336'],
+            borderColor: ['#388E3C', '#D32F2F'],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: false },
+            title: { display: true, text: 'Distribuição de Itens', font: { size: 16 } }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                precision: 0,
+                ticks: { stepSize: 1 }
+            }
+        }
+    }
+});
+</script>
+
+
     <body>
-        <!-- Header -->
+      
         <header class="header">
             <h1>📋 Checklist - PUCPR</h1>
         </header>
 
-        <!-- Conteúdo -->
         <main class="main-content">
             <section class="card">
                 <h2><?= e($checklist['nome']) ?></h2>
@@ -226,14 +266,52 @@
                     <button type="submit" style="margin-top: 15px;">Salvar Conformidade</button>
                 </form>
 
-                <!-- Relatório de aderência -->
-                <section class="report">
-                    <h3>Relatório de Aderência</h3>
-                    <p><strong>Total de Itens Avaliados:</strong> <?= $total_itens ?></p>
-                    <p><strong>Total de Itens Conformes:</strong> <?= $total_conformes ?></p>
-                    <p><strong>Percentual de Aderência:</strong> <?= $percentual_aderencia ?>%</p>
-                    <button onclick="window.print()">🖨️ Imprimir Relatório</button>
-                </section>
+<section class="report">
+    <h3>Relatório de Aderência</h3>
+    <canvas id="graficoAderencia" width="600" height="300"
+        style="width:100%; max-width:600px; height:300px; margin-bottom:20px;"></canvas>
+    <p><strong>Total de Itens Avaliados:</strong> <?= $total_itens ?></p>
+    <p><strong>Total de Itens Conformes:</strong> <?= $total_conformes ?></p>
+    <p><strong>Total de Itens Não Conformes:</strong> <?= $total_itens - $total_conformes ?></p>
+    <p><strong>Percentual de Aderência:</strong> <?= $percentual_aderencia ?>%</p>
+    <button onclick="window.print()">🖨️ Imprimir Relatório</button>
+</section>
+
+<script>
+window.addEventListener("DOMContentLoaded", function() {
+    const ctx = document.getElementById('graficoAderencia').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Conformes', 'Não Conformes'],
+            datasets: [{
+                label: 'Itens',
+                data: [<?= $total_conformes ?>, <?= $total_itens - $total_conformes ?>],
+                backgroundColor: ['#4CAF50', '#F44336'],
+                borderColor: ['#388E3C', '#D32F2F'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: 'Distribuição de Itens', font: { size: 16 } }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    precision: 0,
+                    ticks: { stepSize: 1 }
+                }
+            }
+        }
+    });
+});
+</script>
+
+
+
 
                 <div class="link-area">
                     <a href="acessar_nao_conformidade.php?id_checklist=<?= $checklist['id'] ?>" class="back-link">⬅ Acessar Não Conformidades</a>
@@ -243,7 +321,6 @@
             </section>
         </main>
 
-        <!-- Footer -->
         <footer class="footer">
             PUCPR - Engenharia de Software © <?= date("Y") ?>
         </footer>
