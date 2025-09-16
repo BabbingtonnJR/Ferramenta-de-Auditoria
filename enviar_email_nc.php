@@ -20,32 +20,34 @@ if ($id_nc <= 0 || empty($destinatario)) {
 // Buscar dados da NC e Checklist com o último escalonamento
 $sql = "
     SELECT 
-        nc.id AS id_nc,
-        nc.descricao AS descricao_nc,
-        nc.estado,
-        nc.prioridade,
-        nc.data_criacao,
-        i.descricao AS descricao_item,
-        c.nome AS nome_checklist,
-        p.nome AS classificacao,
-        e.responsavel AS responsavel_db,
-        P.dias AS prazo_db
-    FROM naoConformidade nc
-    INNER JOIN Item i ON nc.id_item = i.id
-    INNER JOIN Item_checklist ic ON i.id = ic.id_item
-    INNER JOIN Checklist c ON ic.id_checklist = c.id
-    LEFT JOIN (
-        SELECT e1.*
-        FROM Escalonamento e1
-        INNER JOIN (
-            SELECT id_nc, MAX(prazo) AS max_prazo
-            FROM Escalonamento
-            GROUP BY id_nc
-        ) e2 ON e1.id_nc = e2.id_nc AND e1.prazo = e2.max_prazo
-    ) e ON e.id_nc = nc.id
-    LEFT JOIN Prazo p ON p.id = nc.id_prazo
-    WHERE nc.id = ?
-    LIMIT 1
+    nc.id AS id_nc,
+    nc.descricao AS descricao_nc,
+    nc.estado,
+    nc.prioridade,
+    nc.data_criacao,
+    i.descricao AS descricao_item,
+    c.nome AS nome_checklist,
+    p.nome AS classificacao,
+    e.responsavel AS responsavel_db,
+    P.dias AS prazo_db,
+    DATE_ADD(nc.data_criacao, INTERVAL p.dias DAY) AS data_entrega
+FROM naoConformidade nc
+INNER JOIN Item i ON nc.id_item = i.id
+INNER JOIN Item_checklist ic ON i.id = ic.id_item
+INNER JOIN Checklist c ON ic.id_checklist = c.id
+LEFT JOIN (
+    SELECT e1.*
+    FROM Escalonamento e1
+    INNER JOIN (
+        SELECT id_nc, MAX(prazo) AS max_prazo
+        FROM Escalonamento
+        GROUP BY id_nc
+    ) e2 ON e1.id_nc = e2.id_nc AND e1.prazo = e2.max_prazo
+) e ON e.id_nc = nc.id
+LEFT JOIN Prazo p ON p.id = nc.id_prazo
+WHERE nc.id = ?
+LIMIT 1
+
 ";
 
 
@@ -83,15 +85,19 @@ $mensagem = "
 📅 <strong>Data da Solicitação:</strong> ".htmlspecialchars($nc['data_criacao'])."<br>
 👤 <strong>Responsável:</strong> ".htmlspecialchars($responsavel)."<br>
 📌 <strong>RQA Responsável:</strong> ".htmlspecialchars($rqa)."<br>
-⏰ <strong>Prazo de Resolução:</strong> ".htmlspecialchars($prazo ?? 'Não definido')."<br>
+⏰ <strong>Prazo de Resolução:</strong> ".htmlspecialchars($nc['data_entrega'] ?? 'Não definido')."<br>
 📈 <strong>Estado:</strong> ".htmlspecialchars($nc['estado'])."<br>
 📝 <strong>Item de Checklist:</strong> ".htmlspecialchars($nc['descricao_item'])."<br>
 📝 <strong>Descrição da NC:</strong> ".htmlspecialchars($nc['descricao_nc'])."<br>
-🏷 <strong>Classificação:</strong> ".htmlspecialchars($nc['classificacao'] ?? 'Não definida')("Dias: " htmlspecialchars($prazo['prazo_db']))."<br>
+🏷 <strong>Classificação:</strong> ".htmlspecialchars($nc['classificacao'] ?? 'Não definida')." (Dias: ".htmlspecialchars($nc['prazo_db'] ?? 'Não definido').")<br>
+
 ⚙ <strong>Ação Corretiva Indicada:</strong> ".htmlspecialchars($acao_corretiva)."<br>
 </body>
 </html>
 ";
+
+
+
 
 // Envio via PHPMailer (cria o objeto ANTES de usar métodos)
 $mail = new PHPMailer(true);
