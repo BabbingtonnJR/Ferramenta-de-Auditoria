@@ -16,16 +16,6 @@ CREATE TABLE Item (
     numero_item INT NOT NULL
 );
 
-CREATE TABLE naoConformidade (
-	id INT AUTO_INCREMENT PRIMARY KEY,
-    id_item INT,
-	data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
-    descricao VARCHAR(100) NOT NULL,
-    estado VARCHAR(30) NOT NULL,
-    prioridade VARCHAR(30) NOT NULL,
-    FOREIGN KEY (id_item) REFERENCES Item(id)
-);
-
 CREATE TABLE Prazo (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(50) NOT NULL,
@@ -34,11 +24,24 @@ CREATE TABLE Prazo (
     FOREIGN KEY (id_checklist) REFERENCES Checklist(id)
 );
 
+CREATE TABLE naoConformidade (
+	id INT AUTO_INCREMENT PRIMARY KEY,
+    id_item INT,
+    id_prazo INT,
+	data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+    descricao VARCHAR(100) NOT NULL,
+    estado VARCHAR(30) NOT NULL,
+    prioridade VARCHAR(30) NOT NULL,
+    FOREIGN KEY (id_item) REFERENCES Item(id),
+    FOREIGN KEY (id_prazo) REFERENCES Prazo(id)
+);
+
 CREATE TABLE Escalonamento (
 	id INT AUTO_INCREMENT PRIMARY KEY,
     id_nc INT,
     id_prazo INT,
     prazo DATETIME,
+    superior_responsavel VARCHAR(100),
     estado VARCHAR(30) NOT NULL,
     data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
     data_conclusao DATETIME,
