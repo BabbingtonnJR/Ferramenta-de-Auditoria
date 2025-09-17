@@ -74,9 +74,7 @@
     $checklist = $result->fetch_assoc();
     $stmt->close();
 
-    if (!$checklist) {
-        die("❌ Checklist não encontrada.");
-    }
+
 
     $sql_itens = "
         SELECT 
