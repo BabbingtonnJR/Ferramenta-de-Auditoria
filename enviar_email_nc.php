@@ -107,7 +107,7 @@ $mail->Subject = $assunto;
 $mail->Body    = $mensagem;
 
 if (!$mail->send()) {
-    die("❌ Erro ao enviar email: " . $mail->ErrorInfo);
+    die(header("Location: acessar_checklist.php?msg=" . urlencode("❌ Erro ao enviar email: " . $mail->ErrorInfo)));
 } else {
     $stmt = $conn->prepare("INSERT INTO Email (id_nc, email_destinatario, email_remetente) VALUES (?, ?, ?)");
     $stmt->bind_param("iss", $id_nc, $destinatario, $remetente);

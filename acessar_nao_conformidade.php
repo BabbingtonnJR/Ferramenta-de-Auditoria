@@ -195,8 +195,8 @@ button:hover { background:#a00000; }
                     <tr>
                         <td class="label">Classificação:</td>
                         <td colspan="3">
-                            <?= htmlspecialchars($row['prioridade']) ?> 
-                            (<?= htmlspecialchars($row['prazo_dias']) ?> dias)
+                            <?= htmlspecialchars($row['prioridade'] ?? "") ?> 
+                            (<?= htmlspecialchars($row['prazo_dias'] ?? "") ?> dias)
                             <input type="hidden" name="prioridade_nc[<?= $row['id_nc'] ?>]" value="<?= htmlspecialchars($row['prioridade']) ?>">
                         </td>
                     </tr>

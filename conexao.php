@@ -2,9 +2,9 @@
 
 
 function conecta_db(){
-    $host = "localhost:3306";
+    $host = "localhost:3308";
     $user = "root"; 
-    $pass = "";
+    $pass = "root";
     $db   = "ChecklistAuditoria";
     $conn = new mysqli($host, $user, $pass, $db);
 

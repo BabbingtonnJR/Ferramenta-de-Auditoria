@@ -21,7 +21,7 @@ CREATE TABLE Prazo (
     nome VARCHAR(50) NOT NULL,
     dias INT NOT NULL,
     id_checklist INT NOT NULL,
-    FOREIGN KEY (id_checklist) REFERENCES Checklist(id)
+    FOREIGN KEY (id_checklist) REFERENCES Checklist(id) ON DELETE CASCADE
 );
 
 CREATE TABLE naoConformidade (
@@ -33,8 +33,8 @@ CREATE TABLE naoConformidade (
     descricao VARCHAR(100) NOT NULL,
     estado VARCHAR(30) NOT NULL,
     prioridade VARCHAR(30) NOT NULL,
-    FOREIGN KEY (id_item) REFERENCES Item(id),
-    FOREIGN KEY (id_prazo) REFERENCES Prazo(id)
+    FOREIGN KEY (id_item) REFERENCES Item(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_prazo) REFERENCES Prazo(id) ON DELETE CASCADE
 );
 
 CREATE TABLE Escalonamento (
@@ -48,8 +48,8 @@ CREATE TABLE Escalonamento (
     data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
     data_conclusao DATETIME,
     responsavel VARCHAR(100) NOT NULL,
-    FOREIGN KEY (id_nc) REFERENCES naoConformidade(id),
-	FOREIGN KEY (id_prazo) REFERENCES Prazo(id)
+    FOREIGN KEY (id_nc) REFERENCES naoConformidade(id) ON DELETE CASCADE,
+	FOREIGN KEY (id_prazo) REFERENCES Prazo(id) ON DELETE CASCADE
 );
 
 CREATE TABLE Email (
@@ -58,13 +58,13 @@ CREATE TABLE Email (
     data_envio DATETIME DEFAULT CURRENT_TIMESTAMP,
     email_destinatario VARCHAR(100) NOT NULL,
     email_remetente VARCHAR(100) NOT NULL,
-    FOREIGN KEY (id_nc) REFERENCES naoConformidade(id)
+    FOREIGN KEY (id_nc) REFERENCES naoConformidade(id) ON DELETE CASCADE
 );
 
 CREATE TABLE Item_checklist (
     id_checklist INT NOT NULL,
-    FOREIGN KEY (id_checklist) REFERENCES Checklist(id),
+    FOREIGN KEY (id_checklist) REFERENCES Checklist(id) ON DELETE CASCADE,
     id_item INT NOT NULL,
-    FOREIGN KEY (id_item) REFERENCES Item(id)
+    FOREIGN KEY (id_item) REFERENCES Item(id) ON DELETE CASCADE
 );
 
